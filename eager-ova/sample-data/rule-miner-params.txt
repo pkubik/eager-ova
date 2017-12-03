@@ -1,0 +1,1 @@
+minSupport = 0.9
