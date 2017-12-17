@@ -5,9 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <stdexcept>
-#include "Types.h"
 #include "IOUtils.h"
-#include "CounterDict.h"
 
 
 /*
@@ -16,7 +14,7 @@
 class CSVReader
 {
 public:
-	typedef std::vector<Item> Row;
+	typedef std::vector<std::string> Row;
 
 	explicit CSVReader(const std::string& path)
 		: path(path), stream(path)
@@ -54,18 +52,11 @@ public:
 				throw std::runtime_error("Parsing error");
 			}
 
-			const auto name = columnNames[i] + '-' + cell;
-			const auto code = encoding.at(name);
-			row[i] = code;
+			row[i] = cell;
 		}
 
 		loadNextRow();
 		return row;
-	}
-
-	const std::unordered_map<std::string, Item>& getEncoding() const
-	{
-		return encoding.getDict();
 	}
 
 	bool isEOF() const
@@ -77,7 +68,6 @@ private:
 	std::string path;
 	std::ifstream stream;
 	std::vector<std::string> columnNames;
-	CounterDict<std::string, Item> encoding;
 	int lineNumber = 0;
 	std::string lineBuffer;
 	bool eof = false;

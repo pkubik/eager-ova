@@ -14,19 +14,16 @@ namespace ruleminertests
 		{
 			CSVReader reader("sample.csv");
 			Assert::IsFalse(reader.isEOF());
-			const auto& encoding = reader.getEncoding();
 
 			auto row1 = reader.nextRow();
-			Assert::AreEqual(row1[0], encoding.at("outlook-sunny"));
-			Assert::AreEqual(row1[1], encoding.at("temperature-hot"));
-			Assert::AreEqual(row1[2], encoding.at("humidity-high"));
+			Assert::AreEqual(row1[0], std::string{ "sunny" });
+			Assert::AreEqual(row1[1], std::string{ "hot" });
+			Assert::AreEqual(row1[2], std::string{ "high" });
 
 			auto row2 = reader.nextRow();
-			Assert::AreEqual(row2[0], encoding.at("outlook-sunny"));
-			Assert::AreEqual(row2[1], encoding.at("temperature-hot"));
-			Assert::AreEqual(row2[2], encoding.at("humidity-low"));
-
-			Assert::AreEqual(encoding.size(), 4ull);
+			Assert::AreEqual(row2[0], std::string{ "sunny" });
+			Assert::AreEqual(row2[1], std::string{ "hot" });
+			Assert::AreEqual(row2[2], std::string{ "low" });
 		}
 
 	};
