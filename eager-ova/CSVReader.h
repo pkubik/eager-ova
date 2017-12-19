@@ -59,6 +59,11 @@ public:
 		return row;
 	}
 
+	const std::vector<std::string>& getColumnNames() const
+	{
+		return columnNames;
+	}
+
 	bool isEOF() const
 	{
 		return eof;

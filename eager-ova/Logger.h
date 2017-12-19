@@ -2,4 +2,5 @@
 
 #include <iostream>
 
-auto& logW = std::cerr;
+typedef decltype(std::cerr) LoggerStream;
+static LoggerStream& logW = std::cerr;

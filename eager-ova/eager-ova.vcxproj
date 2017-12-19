@@ -121,6 +121,7 @@
   <ItemGroup>
     <ClInclude Include="CSVReader.h" />
     <ClInclude Include="CounterDict.h" />
+    <ClInclude Include="Dataset.h" />
     <ClInclude Include="IOUtils.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Types.h" />
