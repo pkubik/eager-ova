@@ -38,5 +38,40 @@ namespace ruleminertests
 			Assert::AreEqual(2u, classSupports2[1]);
 		}
 
+		TEST_METHOD(subsetIteration)
+		{
+			Miner::Node node;
+			
+			node.children.emplace_back();
+			node.children.back().ids = { 1 };
+			node.children.back().children.emplace_back();
+			node.children.back().children.back().ids = { 1, 2 };
+			node.children.back().children.emplace_back();
+			node.children.back().children.back().ids = { 1, 4 };
+
+			node.children.emplace_back();
+			node.children.back().ids = { 2 };
+			node.children.back().children.emplace_back();
+			node.children.back().children.back().ids = { 2, 3 };
+			node.children.back().children.emplace_back();
+			node.children.back().children.back().ids = { 2, 4 };
+
+			decltype(Miner::Node::ids) set{ 1, 2, 4 };
+			Miner::Node::SubsetIterator iter{ node, {1, 2, 4} };
+
+			const Miner::Node* tmp = iter.next();
+			int c = 0;
+			while (tmp != nullptr)
+			{
+				Assert::IsTrue(
+					std::includes(
+						set.begin(), set.end(),
+						tmp->ids.begin(), tmp->ids.end()));
+				Assert::IsTrue(tmp->ids != decltype(Miner::Node::ids){2, 3});
+				tmp = iter.next();
+				++c;
+			}
+			Assert::AreEqual(3, c);
+		}
 	};
 }

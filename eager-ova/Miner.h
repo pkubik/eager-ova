@@ -1,7 +1,9 @@
 #pragma once
 
 #include <algorithm>
+#include <stack>
 #include <iterator>
+#include <cassert>
 #include "Dataset.h"
 #include "Types.h"
 
@@ -20,11 +22,65 @@ inline std::vector<T> vectorIntersection(const std::vector<T>& v1, const std::ve
 }
 
 
+template <typename T>
+inline std::vector<T> vectorUnion(const std::vector<T>& v1, const std::vector<T>& v2)
+{
+	std::vector<T> result;
+	result.reserve(std::min(v1.size(), v2.size()));
+	std::set_union(
+		v1.begin(), v1.end(),
+		v2.begin(), v2.end(),
+		std::inserter(result, result.begin()));
+
+	return result;
+}
+
+
 class Miner
 {
 public:
 	struct Node
 	{
+		struct SubsetIterator
+		{
+			explicit SubsetIterator(const Node& root, const std::vector<Id>& set)
+				: set(set)
+			{
+				stack.push(&root);
+			}
+
+			const Node* next()
+			{
+				while (!stack.empty() && stack.top()->ids.size() + 1 < set.size())
+				{
+					const Node* current = stack.top();
+					stack.pop();
+					for (const auto& child : current->children)
+					{
+						if (child.ids.size() < set.size() &&
+							std::includes(
+								set.begin(), set.end(),
+								child.ids.begin(), child.ids.end()))
+						{
+							stack.push(&child);
+						}
+					}
+				}
+
+				if (stack.empty())
+				{
+					return nullptr;
+				}
+				
+				const Node* current = stack.top();
+				stack.pop();
+				return current;
+			}
+
+			std::vector<Id> set;
+			std::stack<const Node*> stack;
+		};
+
 		std::vector<Id> ids;
 		Tidset tidset;
 		std::vector<Node> children;
@@ -48,7 +104,7 @@ public:
 			if (isSimplified())
 				return support;
 
-			return tidset.size();
+			return static_cast<Support>(tidset.size());
 		}
 
 		std::vector<Support> getClassSupports(const std::vector<Tidset>& classTidsets) const
@@ -62,7 +118,7 @@ public:
 			for (const auto& classTidset : classTidsets)
 			{
 				auto diff = vectorIntersection(tidset, classTidset);
-				result.push_back(diff.size());
+				result.push_back(static_cast<Support>(diff.size()));
 			}
 
 			return result;
@@ -71,9 +127,20 @@ public:
 		void simplify(const std::vector<Tidset>& classTidsets)
 		{
 			classSupports = getClassSupports(classTidsets);
-			support = tidset.size();
+			support = static_cast<Support>(tidset.size());
 			tidset.clear();
 			tidset.shrink_to_fit();
+		}
+
+		void join(const Node& node)
+		{
+			assert(!isSimplified());
+
+			children.emplace_back();
+			children.back().ids = vectorUnion(ids, node.ids);
+			children.back().tidset = vectorIntersection(tidset, node.tidset);
+
+			// Check subset supports
 		}
 	};
 
