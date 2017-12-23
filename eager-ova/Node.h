@@ -3,6 +3,7 @@
 #include <vector>
 #include <iterator>
 #include <algorithm>
+#include <cassert>
 #include <stack>
 #include "Types.h"
 #include "Dataset.h"
@@ -81,7 +82,7 @@ struct Node
 	std::vector<Node> children;
 	Support support = 0;
 	std::vector<Support> classSupports;
-	std::vector<bool> isClassValid;
+	std::vector<bool> classValidity;
 
 	Node() = default;
 	explicit Node(const Node* root)
@@ -95,5 +96,27 @@ struct Node
 	void calculateClassSupports(const std::vector<Tidset>& classTidsets);
 	void simplify();
 	std::vector<Support> subsetsMinClassSupports(const std::vector<Id>& set) const;
-	void join(const Node& node, const std::vector<Tidset>& classTidsets);
+	Node join(const Node& node, const std::vector<Tidset>& classTidsets) const;
+	bool isAnyClassValid() const;
+	
+	template <typename F>
+	void updateClassValidity(const F& predicate)
+	{
+		auto minSubsetsSupports = root->subsetsMinClassSupports(ids);
+		for (uint i = 0; i < classValidity.size(); ++i)
+		{
+			if (classValidity[i])
+			{
+				assert(minSubsetsSupports[i] >= classSupports[i]);
+				if (minSubsetsSupports[i] == classSupports[i])
+				{
+					classValidity[i] = false;
+				}
+				if (!predicate(support, classSupports[i]))
+				{
+					classValidity[i] = false;
+				}
+			}
+		}
+	}
 };

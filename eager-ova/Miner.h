@@ -21,6 +21,7 @@ public:
 			auto classSupport = static_cast<Support>(classTidset.size());
 			root.support += classSupport;
 			root.classSupports.push_back(classSupport);
+			root.classValidity.push_back(true);
 		}
 
 		for (const auto& pair : items)

@@ -7,38 +7,45 @@ namespace ruleminertests
 {
 	void buildSampleTree(Node& root)
 	{
-		root.support = 10;
+		root.support = 33;
 		root.classSupports = { 10, 11, 12 };
+		root.classValidity = { true, true, true };
 
 		root.children.emplace_back(&root);
 		root.children.back().ids = { 1 };
-		root.children.back().support = 10;
-		root.children.back().classSupports = { 10, 8, 2 };
+		root.children.back().support = 23;
+		root.children.back().classSupports = { 10, 7, 6 };
+		root.children.back().classValidity = { true, true, true };
 		
 		root.children.back().children.emplace_back(&root);
 		root.children.back().children.back().ids = { 1, 2 };
-		root.children.back().children.back().support = 6;
-		root.children.back().children.back().classSupports = { 10, 8, 2 };
+		root.children.back().children.back().support = 19;
+		root.children.back().children.back().classSupports = { 10, 7, 2 };
+		root.children.back().children.back().classValidity = { true, true, false };
 		
 		root.children.back().children.emplace_back(&root);
 		root.children.back().children.back().ids = { 1, 4 };
-		root.children.back().children.back().support = 3;
+		root.children.back().children.back().support = 14;
 		root.children.back().children.back().classSupports = { 3, 5, 6 };
+		root.children.back().children.back().classValidity = { true, true, true };
 
 		root.children.emplace_back(&root);
 		root.children.back().ids = { 2 };
-		root.children.back().support = 8;
+		root.children.back().support = 20;
 		root.children.back().classSupports = { 10, 8, 2 };
+		root.children.back().classValidity = { true, true, true };
 		
 		root.children.back().children.emplace_back(&root);
 		root.children.back().children.back().ids = { 2, 3 };
-		root.children.back().children.back().support = 1;
+		root.children.back().children.back().support = 3;
 		root.children.back().children.back().classSupports = { 1, 1, 1 };
+		root.children.back().children.back().classValidity = { true, true, true };
 
 		root.children.back().children.emplace_back(&root);
 		root.children.back().children.back().ids = { 2, 4 };
-		root.children.back().children.back().support = 4;
-		root.children.back().children.back().classSupports = { 5, 4, 3 };
+		root.children.back().children.back().support = 12;
+		root.children.back().children.back().classSupports = { 5, 4, 2 };
+		root.children.back().children.back().classValidity = { true, true, true };
 	}
 
 	TEST_CLASS(MinerTest)
@@ -103,6 +110,24 @@ namespace ruleminertests
 			Assert::AreEqual(3u, subsetsMinClassSupports[0]);
 			Assert::AreEqual(4u, subsetsMinClassSupports[1]);
 			Assert::AreEqual(2u, subsetsMinClassSupports[2]);
+		}
+
+		TEST_METHOD(classValidity)
+		{
+			Node node;
+			buildSampleTree(node);
+
+			node.children[0].updateClassValidity([](Support baseSupport, Support lhsSupport) { return true; });
+			Assert::IsTrue(node.children[0].isAnyClassValid());
+			Assert::IsFalse(node.children[0].classValidity[0]);
+			Assert::IsTrue(node.children[0].classValidity[1]);
+			Assert::IsTrue(node.children[0].classValidity[2]);
+
+			node.children[0].updateClassValidity([](Support baseSupport, Support lhsSupport) { return false; });
+			Assert::IsFalse(node.children[0].isAnyClassValid());
+
+			node.children[0].children[0].updateClassValidity([](Support baseSupport, Support lhsSupport) { return true; });
+			Assert::IsFalse(node.children[0].children[0].isAnyClassValid());
 		}
 	};
 }

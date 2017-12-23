@@ -38,16 +38,20 @@ void Node::simplify()
 	tidset.shrink_to_fit();
 }
 
-void Node::join(const Node& node, const std::vector<Tidset>& classTidsets)
+Node Node::join(const Node& node, const std::vector<Tidset>& classTidsets) const
 {
 	assert(!isSimplified());
 
-	children.emplace_back(root);
-	Node& child = children.back();
+	Node child = Node{ root };
 	child.ids = vectorUnion(ids, node.ids);
 	child.setTidset(vectorIntersection(tidset, node.tidset));
 	child.calculateClassSupports(classTidsets);
-	child.isClassValid = isClassValid;
+	child.classValidity = classValidity;
 
-	auto minSupports = root->subsetsMinClassSupports(child.ids);
+	return child;
+}
+
+bool Node::isAnyClassValid() const
+{
+	return std::any_of(classValidity.begin(), classValidity.end(), [](bool value) { return value; });
 }
