@@ -81,13 +81,17 @@ public:
 			std::stack<const Node*> stack;
 		};
 
+		const Node* root = this;
 		std::vector<Id> ids;
 		Tidset tidset;
 		std::vector<Node> children;
-		Support support;
+		Support support = 0;
 		std::vector<Support> classSupports;
 
 		Node() = default;
+		explicit Node(const Node* root)
+			: root(root)
+		{}
 
 		bool isSimplified() const
 		{
@@ -101,44 +105,55 @@ public:
 
 		Support getSupport() const
 		{
-			if (isSimplified())
-				return support;
-
-			return static_cast<Support>(tidset.size());
+			return support;
 		}
 
-		std::vector<Support> getClassSupports(const std::vector<Tidset>& classTidsets) const
+		void setTidset(Tidset&& value)
 		{
-			if (!classSupports.empty())
-				return classSupports;
+			tidset = value;
+			support = static_cast<Support>(tidset.size());
+		}
 
-			std::vector<Support> result;
-			result.reserve(classTidsets.size());
+		void calculateClassSupports(const std::vector<Tidset>& classTidsets)
+		{
+			classSupports.reserve(classTidsets.size());
 			
 			for (const auto& classTidset : classTidsets)
 			{
 				auto diff = vectorIntersection(tidset, classTidset);
-				result.push_back(static_cast<Support>(diff.size()));
+				classSupports.push_back(static_cast<Support>(diff.size()));
 			}
-
-			return result;
 		}
 
 		void simplify(const std::vector<Tidset>& classTidsets)
 		{
-			classSupports = getClassSupports(classTidsets);
-			support = static_cast<Support>(tidset.size());
 			tidset.clear();
 			tidset.shrink_to_fit();
 		}
 
-		void join(const Node& node)
+		std::vector<Support> subsetsMinClassSupports(const std::vector<Id>& set) const
+		{
+			auto result = root->classSupports;
+			SubsetIterator si{ *root, set };
+			for (const Node* node = si.next(); node != nullptr; node = si.next())
+			{
+				for (uint i = 0; i < result.size(); ++i)
+				{
+					result[i] = std::min(result[i], node->classSupports[i]);
+				}
+			}
+			return result;
+		}
+
+		void join(const Node& node, const std::vector<Tidset>& classTidsets)
 		{
 			assert(!isSimplified());
 
-			children.emplace_back();
-			children.back().ids = vectorUnion(ids, node.ids);
-			children.back().tidset = vectorIntersection(tidset, node.tidset);
+			children.emplace_back(root);
+			Node& child = children.back();
+			child.ids = vectorUnion(ids, node.ids);
+			child.setTidset(vectorIntersection(tidset, node.tidset));
+			child.calculateClassSupports(classTidsets);
 
 			// Check subset supports
 		}
@@ -152,9 +167,16 @@ public:
 	Miner(const std::vector<Tidset>& classTidsets, const std::vector<std::pair<Id, Tidset>>& items)
 		: classTidsets(classTidsets)
 	{
+		for (const auto& classTidset : classTidsets)
+		{
+			auto classSupport = static_cast<Support>(classTidset.size());
+			root.support += classSupport;
+			root.classSupports.push_back(classSupport);
+		}
+
 		for (const auto& pair : items)
 		{
-			root.children.emplace_back();
+			root.children.emplace_back(&root);
 			root.children.back().ids.push_back(pair.first);
 			root.children.back().tidset = pair.second;
 		}

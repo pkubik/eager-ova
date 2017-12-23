@@ -6,7 +6,43 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace ruleminertests
 {
-	TEST_CLASS(CSVReaderTest)
+	void buildSampleTree(Miner::Node& root)
+	{
+		root.support = 10;
+		root.classSupports = { 10, 11, 12 };
+
+		root.children.emplace_back(&root);
+		root.children.back().ids = { 1 };
+		root.children.back().support = 10;
+		root.children.back().classSupports = { 10, 8, 2 };
+		
+		root.children.back().children.emplace_back(&root);
+		root.children.back().children.back().ids = { 1, 2 };
+		root.children.back().children.back().support = 6;
+		root.children.back().children.back().classSupports = { 10, 8, 2 };
+		
+		root.children.back().children.emplace_back(&root);
+		root.children.back().children.back().ids = { 1, 4 };
+		root.children.back().children.back().support = 3;
+		root.children.back().children.back().classSupports = { 3, 5, 6 };
+
+		root.children.emplace_back(&root);
+		root.children.back().ids = { 2 };
+		root.children.back().support = 8;
+		root.children.back().classSupports = { 10, 8, 2 };
+		
+		root.children.back().children.emplace_back(&root);
+		root.children.back().children.back().ids = { 2, 3 };
+		root.children.back().children.back().support = 1;
+		root.children.back().children.back().classSupports = { 1, 1, 1 };
+
+		root.children.back().children.emplace_back(&root);
+		root.children.back().children.back().ids = { 2, 4 };
+		root.children.back().children.back().support = 4;
+		root.children.back().children.back().classSupports = { 5, 4, 3 };
+	}
+
+	TEST_CLASS(MinerTest)
 	{
 	public:
 
@@ -16,7 +52,7 @@ namespace ruleminertests
 			Assert::IsTrue(node.isRoot());
 			Assert::IsTrue(node.children.empty());
 
-			node.tidset = { 1, 2, 4, 6 };
+			node.setTidset({ 1, 2, 4, 6 });
 			const std::vector<std::vector<Id>> classTidsets
 			{
 				{1, 2, 3, 5, 6},
@@ -24,40 +60,25 @@ namespace ruleminertests
 			};
 
 			Assert::AreEqual(4u, node.getSupport());
-			auto classSupports1 = node.getClassSupports(classTidsets);
-			Assert::AreEqual(3u, classSupports1[0]);
-			Assert::AreEqual(2u, classSupports1[1]);
+			node.calculateClassSupports(classTidsets);
+			Assert::AreEqual(3u, node.classSupports[0]);
+			Assert::AreEqual(2u, node.classSupports[1]);
 
 			node.simplify(classTidsets);
 			Assert::IsTrue(node.isSimplified());
 			Assert::IsTrue(node.tidset.empty());
-
 			Assert::AreEqual(4u, node.getSupport());
-			auto classSupports2 = node.getClassSupports(classTidsets);
-			Assert::AreEqual(3u, classSupports2[0]);
-			Assert::AreEqual(2u, classSupports2[1]);
+			Assert::AreEqual(3u, node.classSupports[0]);
+			Assert::AreEqual(2u, node.classSupports[1]);
 		}
 
 		TEST_METHOD(subsetIteration)
 		{
 			Miner::Node node;
-			
-			node.children.emplace_back();
-			node.children.back().ids = { 1 };
-			node.children.back().children.emplace_back();
-			node.children.back().children.back().ids = { 1, 2 };
-			node.children.back().children.emplace_back();
-			node.children.back().children.back().ids = { 1, 4 };
-
-			node.children.emplace_back();
-			node.children.back().ids = { 2 };
-			node.children.back().children.emplace_back();
-			node.children.back().children.back().ids = { 2, 3 };
-			node.children.back().children.emplace_back();
-			node.children.back().children.back().ids = { 2, 4 };
+			buildSampleTree(node);
 
 			decltype(Miner::Node::ids) set{ 1, 2, 4 };
-			Miner::Node::SubsetIterator iter{ node, {1, 2, 4} };
+			Miner::Node::SubsetIterator iter{ node, set };
 
 			const Miner::Node* tmp = iter.next();
 			int c = 0;
@@ -72,6 +93,17 @@ namespace ruleminertests
 				++c;
 			}
 			Assert::AreEqual(3, c);
+		}
+
+		TEST_METHOD(subsetsMinSupport)
+		{
+			Miner::Node node;
+			buildSampleTree(node);
+
+			const auto subsetsMinClassSupports = node.subsetsMinClassSupports({ 1, 2, 4 });
+			Assert::AreEqual(3u, subsetsMinClassSupports[0]);
+			Assert::AreEqual(4u, subsetsMinClassSupports[1]);
+			Assert::AreEqual(2u, subsetsMinClassSupports[2]);
 		}
 	};
 }

@@ -7,7 +7,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace ruleminertests
 {
-	TEST_CLASS(CSVReaderTest)
+	TEST_CLASS(DatasetTest)
 	{
 	public:
 
