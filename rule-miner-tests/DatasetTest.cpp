@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "CppUnitTest.h"
 #include "../eager-ova/Dataset.h"
 #include "../eager-ova/CSVReader.h"

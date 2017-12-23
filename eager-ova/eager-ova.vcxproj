@@ -112,6 +112,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Node.cpp" />
     <ClCompile Include="RuleMiner.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -125,6 +126,7 @@
     <ClInclude Include="IOUtils.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Miner.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>

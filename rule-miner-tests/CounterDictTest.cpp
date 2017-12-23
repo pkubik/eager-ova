@@ -1,5 +1,4 @@
-﻿#include "stdafx.h"
-#include "CppUnitTest.h"
+﻿#include "CppUnitTest.h"
 #include "../eager-ova/CounterDict.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;

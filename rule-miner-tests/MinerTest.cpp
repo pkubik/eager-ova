@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "CppUnitTest.h"
 #include "../eager-ova/Miner.h"
 
@@ -6,7 +5,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace ruleminertests
 {
-	void buildSampleTree(Miner::Node& root)
+	void buildSampleTree(Node& root)
 	{
 		root.support = 10;
 		root.classSupports = { 10, 11, 12 };
@@ -48,7 +47,7 @@ namespace ruleminertests
 
 		TEST_METHOD(simpleNode)
 		{
-			Miner::Node node;
+			Node node;
 			Assert::IsTrue(node.isRoot());
 			Assert::IsTrue(node.children.empty());
 
@@ -64,7 +63,7 @@ namespace ruleminertests
 			Assert::AreEqual(3u, node.classSupports[0]);
 			Assert::AreEqual(2u, node.classSupports[1]);
 
-			node.simplify(classTidsets);
+			node.simplify();
 			Assert::IsTrue(node.isSimplified());
 			Assert::IsTrue(node.tidset.empty());
 			Assert::AreEqual(4u, node.getSupport());
@@ -74,13 +73,13 @@ namespace ruleminertests
 
 		TEST_METHOD(subsetIteration)
 		{
-			Miner::Node node;
+			Node node;
 			buildSampleTree(node);
 
-			decltype(Miner::Node::ids) set{ 1, 2, 4 };
-			Miner::Node::SubsetIterator iter{ node, set };
+			decltype(Node::ids) set{ 1, 2, 4 };
+			Node::SubsetIterator iter{ node, set };
 
-			const Miner::Node* tmp = iter.next();
+			const Node* tmp = iter.next();
 			int c = 0;
 			while (tmp != nullptr)
 			{
@@ -88,7 +87,7 @@ namespace ruleminertests
 					std::includes(
 						set.begin(), set.end(),
 						tmp->ids.begin(), tmp->ids.end()));
-				Assert::IsTrue(tmp->ids != decltype(Miner::Node::ids){2, 3});
+				Assert::IsTrue(tmp->ids != decltype(Node::ids){2, 3});
 				tmp = iter.next();
 				++c;
 			}
@@ -97,7 +96,7 @@ namespace ruleminertests
 
 		TEST_METHOD(subsetsMinSupport)
 		{
-			Miner::Node node;
+			Node node;
 			buildSampleTree(node);
 
 			const auto subsetsMinClassSupports = node.subsetsMinClassSupports({ 1, 2, 4 });
