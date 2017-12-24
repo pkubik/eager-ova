@@ -129,5 +129,39 @@ namespace ruleminertests
 			node.children[0].children[0].updateClassValidity([](Support baseSupport, Support lhsSupport) { return true; });
 			Assert::IsFalse(node.children[0].children[0].isAnyClassValid());
 		}
+
+		TEST_METHOD(nodeJoin)
+		{
+			const std::vector<std::vector<Id>> classTidsets
+			{
+				{ 1, 3, 4, 7 },
+				{ 2, 5, 6 }
+			};
+
+			Node root = createRoot(classTidsets);
+			Assert::AreEqual(7u, root.support);
+			Assert::AreEqual(4u, root.classSupports[0]);
+			Assert::AreEqual(3u, root.classSupports[1]);
+
+			addRootChild(root, 0, { 1, 2, 3, 4 }, classTidsets);
+			Assert::AreEqual(4u, root.children[0].support);
+			Assert::AreEqual(3u, root.children[0].classSupports[0]);
+			Assert::AreEqual(1u, root.children[0].classSupports[1]);
+			
+			addRootChild(root, 1, { 1, 2, 5 }, classTidsets);
+			Assert::AreEqual(3u, root.children[1].support);
+			Assert::AreEqual(1u, root.children[1].classSupports[0]);
+			Assert::AreEqual(2u, root.children[1].classSupports[1]);
+
+			auto joinedNode = root.children[0].join(root.children[1], classTidsets);
+			Assert::AreEqual(2ull, joinedNode.ids.size());
+			Assert::AreEqual(2u, joinedNode.support);
+			Assert::AreEqual(1u, joinedNode.classSupports[0]);
+			Assert::AreEqual(1u, joinedNode.classSupports[1]);
+
+			Assert::IsTrue(joinedNode.isAnyClassValid());
+			joinedNode.updateClassValidity([](Support support, Support lhsSupport) { return true; });
+			Assert::IsFalse(joinedNode.isAnyClassValid());
+		}
 	};
 }
