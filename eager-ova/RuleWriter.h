@@ -83,3 +83,19 @@ public:
 private:
 	const std::vector<std::string> reversedEncoding;
 };
+
+class RuleWriter
+{
+public:
+	RuleWriter(const std::string& path, const std::unordered_map<std::string, Id>& encoding)
+		: decoder(reverseEncoding(encoding)), stream(path) {}
+
+	void writeRule(const Rule& rule)
+	{
+		stream << decoder.decodeToString(rule) << "\n";
+	}
+
+private:
+	RuleDecoder decoder;
+	std::ofstream stream;
+};

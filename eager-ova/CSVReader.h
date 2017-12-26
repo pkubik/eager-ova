@@ -19,6 +19,11 @@ public:
 	explicit CSVReader(const std::string& path)
 		: path(path), stream(path)
 	{
+		if (stream.fail())
+		{
+			throw std::runtime_error("CSV file does not exist.");
+		}
+
 		std::string cell;
 
 		std::getline(stream, lineBuffer);

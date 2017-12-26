@@ -2,11 +2,15 @@
 #include <string>
 #include "IOUtils.h"
 #include "CSVReader.h"
+#include "Dataset.h"
+#include "Miner.h"
+#include "RuleWriter.h"
 
 using namespace std;
 
 constexpr auto PARAMS_PATH_SUFFIX = "\\rule-miner-params.txt";
 constexpr auto CSV_PATH_SUFFIX = "\\data.csv";
+constexpr auto RULES_PATH_SUFFIX = "\\rules.txt";
 
 void printHelp()
 {
@@ -33,9 +37,23 @@ int main(const int argc, const char* argv[])
 
 	cout << "Reading the data..." << endl;
 	const auto csvPath = dataPath + CSV_PATH_SUFFIX;
-	auto csvReader = CSVReader(csvPath);
+	auto dataset = Dataset::fromFile(csvPath);
 
-	cerr << "Not implemented!" << endl;
+	cout << "Mining the rules..." << endl;
+	const auto& requiredValues = dataset.getRequiredValues();
+	const std::vector<Id> classIds{ requiredValues.begin(), requiredValues.end() };
+	Miner miner{ classIds };
+
+	auto rules = miner.mine(dataset.getItems());
+	cout << "Discovered " << std::to_string(rules.size()) << " rules..." << endl;
+
+	cout << "Writing the rules..." << endl;
+	const auto rulesPath = dataPath + RULES_PATH_SUFFIX;
+	RuleWriter writer(rulesPath, dataset.getValueEncoding());
+	for (const auto& rule : rules)
+	{
+		writer.writeRule(rule);
+	}
 
 	return 0;
 }
