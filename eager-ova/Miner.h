@@ -109,7 +109,7 @@ public:
 						stack.push(lnode->children.back().get());
 					}
 				}
-
+				lnode->simplify();
 			}
 		}
 

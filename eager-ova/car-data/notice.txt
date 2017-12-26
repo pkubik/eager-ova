@@ -1,0 +1,19 @@
+Car Evaluation Data Set
+
+Downloaded from:
+https://archive.ics.uci.edu/ml/datasets/Car+Evaluation
+
+Header added manually.
+
+Attribute information (see the website for the details):
+
+Class Values:
+unacc, acc, good, vgood
+
+Attributes:
+buying: vhigh, high, med, low.
+maint: vhigh, high, med, low.
+doors: 2, 3, 4, 5more.
+persons: 2, 4, more.
+lug_boot: small, med, big.
+safety: low, med, high. 
