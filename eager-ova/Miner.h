@@ -141,9 +141,10 @@ public:
 		}
 	}
 
+	Params params;
+
 private:
 	Node root;
 	const std::vector<Id> classIds;
 	std::vector<Tidset> classTidsets;
-	Params params;
 };
