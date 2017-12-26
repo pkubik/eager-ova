@@ -21,7 +21,7 @@ namespace ruleminertests
 
 			auto row2 = reader.nextRow();
 			Assert::AreEqual(row2[0], std::string{ "sunny" });
-			Assert::AreEqual(row2[1], std::string{ "hot" });
+			Assert::AreEqual(row2[1], std::string{ "cold" });
 			Assert::AreEqual(row2[2], std::string{ "low" });
 		}
 

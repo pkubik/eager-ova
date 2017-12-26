@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <memory>
 #include <vector>
 #include <iterator>
 #include <algorithm>
@@ -36,6 +37,8 @@ inline std::vector<T> vectorUnion(const std::vector<T>& v1, const std::vector<T>
 
 struct Node
 {
+	typedef std::unique_ptr<Node> UniquePtr;
+
 	struct SubsetIterator
 	{
 		explicit SubsetIterator(const Node& root, const std::vector<Id>& set)
@@ -44,33 +47,7 @@ struct Node
 			stack.push(&root);
 		}
 
-		const Node* next()
-		{
-			while (!stack.empty() && stack.top()->ids.size() + 1 < set.size())
-			{
-				const Node* current = stack.top();
-				stack.pop();
-				for (const auto& child : current->children)
-				{
-					if (child.ids.size() < set.size() &&
-						std::includes(
-							set.begin(), set.end(),
-							child.ids.begin(), child.ids.end()))
-					{
-						stack.push(&child);
-					}
-				}
-			}
-
-			if (stack.empty())
-			{
-				return nullptr;
-			}
-
-			const Node* current = stack.top();
-			stack.pop();
-			return current;
-		}
+		const Node* next();
 
 		std::vector<Id> set;
 		std::stack<const Node*> stack;
@@ -79,7 +56,7 @@ struct Node
 	const Node* root = this;
 	std::vector<Id> ids;
 	Tidset tidset;
-	std::vector<Node> children;
+	std::vector<UniquePtr> children;
 	Support support = 0;
 	std::vector<Support> classSupports;
 	std::vector<bool> classValidity;
@@ -95,27 +72,20 @@ struct Node
 	void setTidset(Tidset&& value);
 	void calculateClassSupports(const std::vector<Tidset>& classTidsets);
 	void simplify();
+	Support Node::subsetsMinSupport(const std::vector<Id>& set) const;
 	std::vector<Support> subsetsMinClassSupports(const std::vector<Id>& set) const;
-	Node join(const Node& node, const std::vector<Tidset>& classTidsets) const;
+	Node::UniquePtr join(const Node& node, const std::vector<Tidset>& classTidsets) const;
 	bool isAnyClassValid() const;
 	
-	template <typename F>
-	void updateClassValidity(const F& predicate)
+	void invalidateNonGenerators()
 	{
-		auto minSubsetsSupports = root->subsetsMinClassSupports(ids);
+		auto minSubsetsSupport = root->subsetsMinSupport(ids);
 		for (uint i = 0; i < classValidity.size(); ++i)
 		{
-			if (classValidity[i])
+			assert(minSubsetsSupport >= support);
+			if (minSubsetsSupport == support)
 			{
-				assert(minSubsetsSupports[i] >= classSupports[i]);
-				if (minSubsetsSupports[i] == classSupports[i])
-				{
-					classValidity[i] = false;
-				}
-				if (!predicate(support, classSupports[i]))
-				{
-					classValidity[i] = false;
-				}
+				classValidity[i] = false;
 			}
 		}
 	}

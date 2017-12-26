@@ -12,17 +12,11 @@ namespace ruleminertests
 
 		TEST_METHOD(readSampleDataset)
 		{
-			CSVReader reader("sample.csv");
-			const auto& columnNames = reader.getColumnNames();
-			Dataset dataset{ columnNames };
-
-			while (!reader.isEOF())
-			{
-				dataset.append(reader.nextRow());
-			}
+			auto dataset = Dataset::fromFile("sample.csv");
+			const auto& columnNames = dataset.getColumnNames();
 
 			Assert::AreEqual(2ull, dataset.getRequiredValues().size());
-			Assert::AreEqual(4ull, dataset.getValueEncoding().size());
+			Assert::AreEqual(5ull, dataset.getValueEncoding().size());
 			const auto& encoding = dataset.getValueEncoding();
 			
 			const auto sunnyValue = encoding.at("outlook-sunny");
@@ -47,6 +41,5 @@ namespace ruleminertests
 			const auto& hlowColumnName = columnNames[hlowColumnId];
 			Assert::AreEqual({ "humidity" }, hlowColumnName);
 		}
-
 	};
 }

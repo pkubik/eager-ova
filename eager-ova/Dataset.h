@@ -6,6 +6,7 @@
 #include <string>
 #include "CounterDict.h"
 #include "Types.h"
+#include "CSVReader.h"
 
 typedef std::vector<Id> Tidset;
 
@@ -57,6 +58,25 @@ public:
 	const auto& getColumnsByValues() const
 	{
 		return columnByValue;
+	}
+
+	const auto& getColumnNames() const
+	{
+		return columnNames;
+	}
+
+	static Dataset fromFile(const std::string& path)
+	{
+		CSVReader reader(path);
+		const auto& columnNames = reader.getColumnNames();
+		Dataset dataset{ columnNames };
+
+		while (!reader.isEOF())
+		{
+			dataset.append(reader.nextRow());
+		}
+
+		return dataset;
 	}
 
 private:

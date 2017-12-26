@@ -1,6 +1,34 @@
 ﻿#include <cassert>
 #include "Node.h"
 
+const Node* Node::SubsetIterator::next()
+{
+	while (!stack.empty() && stack.top()->ids.size() + 1 < set.size())
+	{
+		const Node* current = stack.top();
+		stack.pop();
+		for (const auto& child : current->children)
+		{
+			if (child->ids.size() < set.size() &&
+				std::includes(
+					set.begin(), set.end(),
+					child->ids.begin(), child->ids.end()))
+			{
+				stack.push(child.get());
+			}
+		}
+	}
+
+	if (stack.empty())
+	{
+		return nullptr;
+	}
+
+	const Node* current = stack.top();
+	stack.pop();
+	return current;
+}
+
 void Node::setTidset(Tidset&& value)
 {
 	tidset = value;
@@ -16,6 +44,17 @@ void Node::calculateClassSupports(const std::vector<Tidset>& classTidsets)
 		auto diff = vectorIntersection(tidset, classTidset);
 		classSupports.push_back(static_cast<Support>(diff.size()));
 	}
+}
+
+Support Node::subsetsMinSupport(const std::vector<Id>& set) const
+{
+	auto result = support;
+	Node::SubsetIterator si{ *this, set };
+	for (const Node* node = si.next(); node != nullptr; node = si.next())
+	{
+		result = std::min(result, node->support);
+	}
+	return result;
 }
 
 std::vector<Support> Node::subsetsMinClassSupports(const std::vector<Id>& set) const
@@ -38,15 +77,15 @@ void Node::simplify()
 	tidset.shrink_to_fit();
 }
 
-Node Node::join(const Node& node, const std::vector<Tidset>& classTidsets) const
+Node::UniquePtr Node::join(const Node& node, const std::vector<Tidset>& classTidsets) const
 {
 	assert(!isSimplified());
 
-	Node child = Node{ root };
-	child.ids = vectorUnion(ids, node.ids);
-	child.setTidset(vectorIntersection(tidset, node.tidset));
-	child.calculateClassSupports(classTidsets);
-	child.classValidity = classValidity;
+	auto child = std::make_unique<Node>(root);
+	child->ids = vectorUnion(ids, node.ids);
+	child->setTidset(vectorIntersection(tidset, node.tidset));
+	child->calculateClassSupports(classTidsets);
+	child->classValidity = classValidity;
 
 	return child;
 }
