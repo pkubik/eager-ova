@@ -17,6 +17,24 @@ inline std::vector<std::string> decodeVector(const std::vector<Id>& vec, const s
 	return result;
 }
 
+/**
+ * \brief Creates reversed encoding for decoding numeric identifiers
+ * \param encoding Original string -> int encoding. Integers must form a {0, ..., N-1} sequence
+ * \return Reversed input encoding
+ */
+inline std::vector<std::string> reverseEncoding(const std::unordered_map<std::string, Id>& encoding)
+{
+	std::vector<std::string> result;
+	result.resize(encoding.size());
+
+	for (const auto& pair : encoding)
+	{
+		result[pair.second] = pair.first;
+	}
+
+	return result;
+}
+
 class RuleDecoder
 {
 public:

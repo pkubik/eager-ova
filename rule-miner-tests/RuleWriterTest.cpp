@@ -28,5 +28,18 @@ namespace ruleminertests
 			const std::vector<std::string> referenceLhs = { "A", "C" };
 			Assert::IsTrue(vectorIntersection(decodedRule.lhs, referenceLhs).size() == vectorUnion(decodedRule.lhs, referenceLhs).size());
 		}
+
+		TEST_METHOD(reverseEncodingTest)
+		{
+			std::unordered_map<std::string, Id> encoding;
+			encoding["A"] = 0;
+			encoding["B"] = 1;
+			encoding["C"] = 2;
+
+			auto reversedEncoding = reverseEncoding(encoding);
+			Assert::AreEqual(std::string("A"), reversedEncoding[0]);
+			Assert::AreEqual(std::string("B"), reversedEncoding[1]);
+			Assert::AreEqual(std::string("C"), reversedEncoding[2]);
+		}
 	};
 }
