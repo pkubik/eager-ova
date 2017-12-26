@@ -61,6 +61,25 @@ public:
 		return DecodedRule(rule, reversedEncoding);
 	}
 
+	std::string decodeToString(const DecodedRule& rule) const
+	{
+		std::string result = "";
+		for (const auto& id : rule.lhs)
+		{
+			result += id + ", ";
+		}
+		result = result.substr(0, result.size() - 2) + " -> " + rule.rhs;
+		result += "; " + std::to_string(rule.support) + ", " + std::to_string(rule.confidence);
+
+		return result;
+	}
+
+	std::string decodeToString(const Rule& rule) const
+	{
+		const auto decodedRule = decode(rule);
+		return decodeToString(decodedRule);
+	}
+
 private:
 	const std::vector<std::string> reversedEncoding;
 };

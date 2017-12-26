@@ -41,5 +41,20 @@ namespace ruleminertests
 			Assert::AreEqual(std::string("B"), reversedEncoding[1]);
 			Assert::AreEqual(std::string("C"), reversedEncoding[2]);
 		}
+
+		TEST_METHOD(decodeRuleToString)
+		{
+			const std::vector<std::string> reversedEncoding = { "A", "B", "C" };
+			Rule rule;
+			rule.lhs = { 0u, 2u };
+			rule.rhs = 1u;
+			rule.support = 10u;
+			rule.confidence = 0.5;
+
+			RuleDecoder decoder{ reversedEncoding };
+			const auto ruleString = decoder.decodeToString(rule);
+
+			Assert::AreEqual(std::string("A, C -> B; 10, " + std::to_string(rule.confidence)), ruleString);
+		}
 	};
 }
