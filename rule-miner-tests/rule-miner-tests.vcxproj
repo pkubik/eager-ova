@@ -160,6 +160,7 @@
     <ClCompile Include="DatasetTest.cpp" />
     <ClCompile Include="MinerTest.cpp" />
     <ClCompile Include="CSVReaderTest.cpp" />
+    <ClCompile Include="RuleWriterTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\eager-ova\eager-ova.vcxproj">

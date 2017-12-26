@@ -127,6 +127,7 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Miner.h" />
     <ClInclude Include="Node.h" />
+    <ClInclude Include="RuleWriter.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
