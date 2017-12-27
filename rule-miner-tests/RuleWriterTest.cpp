@@ -17,6 +17,7 @@ namespace ruleminertests
 			rule.rhs = 1u;
 			rule.support = 10u;
 			rule.confidence = 0.5;
+			rule.growth = 3.0;
 
 			RuleDecoder decoder{ reversedEncoding };
 			const auto decodedRule = decoder.decode(rule);
@@ -50,11 +51,16 @@ namespace ruleminertests
 			rule.rhs = 1u;
 			rule.support = 10u;
 			rule.confidence = 0.5;
+			rule.growth = 3.0;
 
 			RuleDecoder decoder{ reversedEncoding };
 			const auto ruleString = decoder.decodeToString(rule);
 
-			Assert::AreEqual(std::string("A, C -> B; 10, " + std::to_string(rule.confidence)), ruleString);
+			const std::string refRuleString =
+				std::string("A, C -> B; 10, " +
+					std::to_string(rule.confidence)) + ", " +
+					std::to_string(rule.growth);
+			Assert::AreEqual(refRuleString, ruleString);
 		}
 	};
 }

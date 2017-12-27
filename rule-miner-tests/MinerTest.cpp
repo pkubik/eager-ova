@@ -180,5 +180,11 @@ namespace ruleminertests
 			auto rules = miner.mine(dataset.getItems());
 			Assert::AreEqual(2ull, rules.size());
 		}
+
+		TEST_METHOD(growthTest)
+		{
+			Assert::AreEqual(1.0, ruleGrowth(4, 3, 2, 6));
+			Assert::AreEqual(0.0, ruleGrowth(4, 3, 0, 10));
+		}
 	};
 }

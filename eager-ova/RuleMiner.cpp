@@ -43,7 +43,12 @@ int main(const int argc, const char* argv[])
 	const auto& requiredValues = dataset.getRequiredValues();
 	const std::vector<Id> classIds{ requiredValues.begin(), requiredValues.end() };
 	Miner miner{ classIds };
-	miner.params.minRelSupport = params.at("minSupport");
+	if (params.count("minSupport") > 0)
+		miner.params.minRelSupport = params.at("minSupport");
+	if (params.count("cp") > 0)
+		miner.params.cp = params.at("cp");
+	if (params.count("growthThreshold") > 0)
+		miner.params.growthThreshold = params.at("growthThreshold");
 
 	auto rules = miner.mine(dataset.getItems());
 	cout << "Discovered " << std::to_string(rules.size()) << " rules..." << endl;

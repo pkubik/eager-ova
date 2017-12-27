@@ -48,12 +48,14 @@ public:
 		    , rhs(reversedEncoding.at(rule.rhs))
 			, support(rule.support)
 		    , confidence(rule.confidence)
+			, growth(rule.growth)
 		{}
 
 		std::vector<std::string> lhs;
 		std::string rhs;
 		Support support;
 		double confidence;
+		double growth;
 	};
 
 	DecodedRule decode(const Rule& rule) const
@@ -69,7 +71,7 @@ public:
 			result += id + ", ";
 		}
 		result = result.substr(0, result.size() - 2) + " -> " + rule.rhs;
-		result += "; " + std::to_string(rule.support) + ", " + std::to_string(rule.confidence);
+		result += "; " + std::to_string(rule.support) + ", " + std::to_string(rule.confidence) + ", " + std::to_string(rule.growth);
 
 		return result;
 	}

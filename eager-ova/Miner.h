@@ -25,6 +25,7 @@ struct Rule
 	Id rhs;
 	Support support;
 	double confidence;
+	double growth;
 };
 
 inline Node::UniquePtr createRootChild(const Node& root, const Id id, Tidset&& tidset, const std::vector<Tidset>& classTidsets)
@@ -49,12 +50,22 @@ inline void addRootChild(Node& root, const Id id, Tidset&& tidset, const std::ve
 	}
 }
 
+inline double ruleGrowth(const Support const supX, const Support supY, const Support supXY, const Support dbSize)
+{
+	const Support supNotY = dbSize - supY;
+	const Support supXNotY = supX - supXY;
+
+	return static_cast<double>(supXY) * supNotY / supXNotY / supY;
+}
+
 class Miner
 {
 public:
 	struct Params
 	{
 		double minRelSupport = 0.0;
+		bool cp = true;
+		double growthThreshold = 0.0;
 	};
 
 	Miner(const std::vector<Id>& classIds)
@@ -66,6 +77,7 @@ public:
 		for (auto id : classIds)
 		{
 			classTidsets.push_back(items.at(id));
+			dbSize += static_cast<Support>(classTidsets.back().size());
 		}
 		root = createRoot(classTidsets);
 
@@ -127,18 +139,32 @@ public:
 				{
 					node.classValidity[i] = false;
 				}
-				else if (node.support == node.classSupports[i]) // confidence == 1
+				else
 				{
-					rules.emplace_back();
-					auto& rule = rules.back();
-					rule.lhs = node.ids;
-					rule.rhs = classIds[i];
-					rule.support = node.support;
-					rule.confidence = 1.0;
-					node.classValidity[i] = false;
+					double confidenceValue = static_cast<double>(node.classSupports[i]) / node.support;
+					double growthValue = growth(node.support, node.classSupports[i], i);
+
+					if ((params.cp && confidenceValue == 1.0) ||
+						(!params.cp && growthValue > params.growthThreshold))
+					{
+						rules.emplace_back();
+						auto& rule = rules.back();
+						rule.lhs = node.ids;
+						rule.rhs = classIds[i];
+						rule.support = node.support;
+						rule.confidence = confidenceValue;
+						rule.growth = growthValue;
+						node.classValidity[i] = false;
+					}
 				}
 			}
 		}
+	}
+
+	double growth(const Support supX, const Support supXY, const int classIdx) const
+	{
+		const Support supY = static_cast<Support>(classTidsets[classIdx].size());
+		return ruleGrowth(supX, supY, supXY, dbSize);
 	}
 
 	Params params;
@@ -147,4 +173,5 @@ private:
 	Node root;
 	const std::vector<Id> classIds;
 	std::vector<Tidset> classTidsets;
+	Support dbSize = 0;
 };
