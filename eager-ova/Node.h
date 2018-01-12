@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <valarray>
 #include <iterator>
 #include <algorithm>
 #include <cassert>
@@ -59,7 +60,7 @@ struct Node
 	std::vector<UniquePtr> children;
 	Support support = 0;
 	std::vector<Support> classSupports;
-	std::vector<bool> classValidity;
+	std::valarray<bool> classValidity;
 
 	Node() = default;
 	explicit Node(const Node* root)
@@ -77,16 +78,10 @@ struct Node
 	Node::UniquePtr join(const Node& node, const std::vector<Tidset>& classTidsets) const;
 	bool isAnyClassValid() const;
 	
-	void invalidateNonGenerators()
+	bool isGenerator()
 	{
-		auto minSubsetsSupport = root->subsetsMinSupport(ids);
-		for (uint i = 0; i < classValidity.size(); ++i)
-		{
-			assert(minSubsetsSupport >= support);
-			if (minSubsetsSupport == support)
-			{
-				classValidity[i] = false;
-			}
-		}
+		const auto minSubsetsSupport = root->subsetsMinSupport(ids);
+		assert(minSubsetsSupport >= support);
+		return minSubsetsSupport > support;
 	}
 };

@@ -8,12 +8,12 @@
 inline Node createRoot(const std::vector<Tidset>& classTidsets)
 {
 	Node root;
+	root.classValidity = std::valarray<bool>(true, classTidsets.size());
 	for (const auto& classTidset : classTidsets)
 	{
 		auto classSupport = static_cast<Support>(classTidset.size());
 		root.support += classSupport;
 		root.classSupports.push_back(classSupport);
-		root.classValidity.push_back(true);
 	}
 
 	return root;
@@ -35,7 +35,6 @@ inline Node::UniquePtr createRootChild(const Node& root, const Id id, Tidset&& t
 	node->setTidset(std::move(tidset));
 	node->calculateClassSupports(classTidsets);
 	node->classValidity = root.classValidity;
-	node->invalidateNonGenerators();
 
 	return node;
 }
@@ -44,7 +43,7 @@ inline void addRootChild(Node& root, const Id id, Tidset&& tidset, const std::ve
 {
 	auto node = createRootChild(root, id, std::move(tidset), classTidsets);
 
-	if (node->isAnyClassValid())
+	if (node->isGenerator())
 	{
 		root.children.emplace_back(std::move(node));
 	}
@@ -111,14 +110,16 @@ public:
 				{
 					Node* rnode = sit->get();
 					auto tmp = lnode->join(*rnode, classTidsets);
-					tmp->invalidateNonGenerators();
-
-					evaluateNode(*tmp, results);
-
-					if (tmp->isAnyClassValid())
+					
+					if (tmp->isGenerator())
 					{
-						lnode->children.push_back(std::move(tmp));
-						stack.push(lnode->children.back().get());
+						evaluateNode(*tmp, results);
+
+						if (tmp->isAnyClassValid())
+						{
+							lnode->children.push_back(std::move(tmp));
+							stack.push(lnode->children.back().get());
+						}
 					}
 				}
 				lnode->simplify();
@@ -147,6 +148,7 @@ public:
 					if ((params.cp && confidenceValue == 1.0) ||
 						(!params.cp && growthValue > params.growthThreshold))
 					{
+						node.classValidity[i] = false;
 						rules.emplace_back();
 						auto& rule = rules.back();
 						rule.lhs = node.ids;

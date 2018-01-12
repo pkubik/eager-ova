@@ -85,12 +85,12 @@ Node::UniquePtr Node::join(const Node& node, const std::vector<Tidset>& classTid
 	child->ids = vectorUnion(ids, node.ids);
 	child->setTidset(vectorIntersection(tidset, node.tidset));
 	child->calculateClassSupports(classTidsets);
-	child->classValidity = classValidity;
+	child->classValidity = classValidity && node.classValidity;
 
 	return child;
 }
 
 bool Node::isAnyClassValid() const
 {
-	return std::any_of(classValidity.begin(), classValidity.end(), [](bool value) { return value; });
+	return std::any_of(begin(classValidity), end(classValidity), [](bool value) { return value; });
 }
