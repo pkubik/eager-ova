@@ -57,10 +57,21 @@ int main(const int argc, const char* argv[])
 
 	cout << "Writing the rules..." << endl;
 	const auto rulesPath = dataPath + RULES_PATH_SUFFIX;
-	RuleWriter writer(rulesPath, dataset.getValueEncoding());
-	for (const auto& rule : rules)
+	if (params.count("tabularOutput") && params.at("tabularOutput"))
 	{
-		writer.writeRule(rule);
+		TableRuleWriter writer(rulesPath, dataset.getValueEncoding(), dataset.getColumnNames());
+		for (const auto& rule : rules)
+		{
+			writer.writeRule(rule);
+		}
+	}
+	else
+	{
+		RuleWriter writer(rulesPath, dataset.getValueEncoding());
+		for (const auto& rule : rules)
+		{
+			writer.writeRule(rule);
+		}
 	}
 
 	return 0;

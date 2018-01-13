@@ -173,3 +173,22 @@ private:
 	RuleDecoder decoder;
 	std::ofstream stream;
 };
+
+class TableRuleWriter
+{
+public:
+	TableRuleWriter(const std::string& path, std::unordered_map<std::string, Id> encoding, std::vector<std::string> columnNames)
+		: decoder(std::move(encoding), std::move(columnNames)), stream(path)
+	{
+		stream << decoder.headerString() << "\n";
+	}
+
+	void writeRule(const Rule& rule)
+	{
+		stream << decoder.decodeToRow(rule) << "\n";
+	}
+
+private:
+	TableRuleDecoder decoder;
+	std::ofstream stream;
+};

@@ -2,3 +2,4 @@ minSupport = 0.0
 cp = 0
 growthThreshold = 3.0
 rawData = 0
+tabularOutput = 1
