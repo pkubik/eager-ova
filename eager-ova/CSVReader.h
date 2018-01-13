@@ -84,7 +84,7 @@ private:
 
 	static bool isLineEmpty(const std::string& line)
 	{
-		if (line.size() == 0) return true;
+		if (line.empty()) return true;
 		if (line[0] == '#') return true;
 		return false;
 	}

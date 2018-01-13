@@ -122,19 +122,13 @@ namespace ruleminertests
 			Assert::AreEqual(2u, subsetsMinClassSupports[2]);
 		}
 
-		TEST_METHOD(classValidity)
+		TEST_METHOD(isGenerator)
 		{
 			Node node;
 			buildSampleTree(node);
 
-			node.children[0]->invalidateNonGenerators();
-			Assert::IsTrue(node.children[0]->isAnyClassValid());
-			Assert::IsTrue(node.children[0]->classValidity[0]);
-			Assert::IsTrue(node.children[0]->classValidity[1]);
-			Assert::IsTrue(node.children[0]->classValidity[2]);
-
-			node.children[1]->children[1]->invalidateNonGenerators();
-			Assert::IsFalse(node.children[1]->children[1]->isAnyClassValid());
+			Assert::IsTrue(node.children[0]->isGenerator());
+			Assert::IsFalse(node.children[1]->children[1]->isGenerator());
 		}
 
 		TEST_METHOD(nodeJoin)
@@ -166,8 +160,7 @@ namespace ruleminertests
 			Assert::AreEqual(1u, joinedNode->classSupports[0]);
 			Assert::AreEqual(1u, joinedNode->classSupports[1]);
 
-			joinedNode->invalidateNonGenerators();
-			Assert::IsTrue(joinedNode->isAnyClassValid());
+			Assert::IsTrue(joinedNode->isGenerator());
 		}
 
 		TEST_METHOD(sampleMine)

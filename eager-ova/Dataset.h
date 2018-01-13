@@ -13,16 +13,27 @@ typedef std::vector<Id> Tidset;
 class Dataset
 {
 public:
-	explicit Dataset(const std::vector<std::string>& columnNames, const int classColumn = -1)
-		: columnNames(columnNames), classColumn(classColumn >= 0 ? classColumn : (static_cast<uint>(columnNames.size()) - 1))
+	explicit Dataset(const std::vector<std::string>& columnNames, const bool ignoreColumns = false, const int classColumn = -1)
+		: columnNames(columnNames)
+		, ignoreColumns(ignoreColumns)
+		, classColumn(classColumn >= 0 ? classColumn : (static_cast<uint>(columnNames.size()) - 1))
 	{}
 
 	void append(const std::vector<std::string>& row)
 	{
 		for (uint i = 0; i < columnNames.size(); ++i)
 		{
-			const auto& value = columnNames[i] + '-' + row[i];
-			const auto valueId = valueEncoding.at(value);
+			Id valueId;
+			
+			if (ignoreColumns)
+			{
+				valueId = valueEncoding.at(row[i]);
+			}
+			else
+			{
+				const auto& value = columnNames[i] + '-' + row[i];
+				valueId = valueEncoding.at(value);
+			}
 			
 			// If new value Id appeared
 			if (valueId == columnByValue.size())
@@ -65,11 +76,11 @@ public:
 		return columnNames;
 	}
 
-	static Dataset fromFile(const std::string& path)
+	static Dataset fromFile(const std::string& path, const bool rawData = false)
 	{
 		CSVReader reader(path);
 		const auto& columnNames = reader.getColumnNames();
-		Dataset dataset{ columnNames };
+		Dataset dataset{ columnNames, rawData };
 
 		while (!reader.isEOF())
 		{
@@ -81,6 +92,7 @@ public:
 
 private:
 	std::vector<std::string> columnNames;
+	const bool ignoreColumns;
 	const uint classColumn;
 	std::unordered_set<Id> requiredValues;
 	std::unordered_map<Id, Tidset> items;

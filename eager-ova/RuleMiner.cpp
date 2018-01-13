@@ -37,7 +37,9 @@ int main(const int argc, const char* argv[])
 
 	cout << "Reading the data..." << endl;
 	const auto csvPath = dataPath + CSV_PATH_SUFFIX;
-	auto dataset = Dataset::fromFile(csvPath);
+	
+	auto dataset = (params.count("rawData") > 0 && params.at("rawData")) ?
+		Dataset::fromFile(csvPath, true) : Dataset::fromFile(csvPath, false);
 
 	cout << "Mining the rules..." << endl;
 	const auto& requiredValues = dataset.getRequiredValues();
