@@ -46,16 +46,12 @@ public:
 		DecodedRule(const Rule& rule, const std::vector<std::string>& reversedEncoding)
 			: lhs(decodeVector(rule.lhs, reversedEncoding))
 		    , rhs(reversedEncoding.at(rule.rhs))
-			, support(rule.support)
-		    , confidence(rule.confidence)
-			, growth(rule.growth)
+			, originalRule(rule)
 		{}
 
 		std::vector<std::string> lhs;
 		std::string rhs;
-		Support support;
-		double confidence;
-		double growth;
+		const Rule& originalRule;
 	};
 
 	DecodedRule decode(const Rule& rule) const
@@ -65,13 +61,18 @@ public:
 
 	std::string decodeToString(const DecodedRule& rule) const
 	{
-		std::string result = "";
+		std::string result;
 		for (const auto& id : rule.lhs)
 		{
 			result += id + ", ";
 		}
-		result = result.substr(0, result.size() - 2) + " -> " + rule.rhs;
-		result += "; " + std::to_string(rule.support) + ", " + std::to_string(rule.confidence) + ", " + std::to_string(rule.growth);
+		result = result.substr(0, result.size() - 2) + "; " + rule.rhs;
+		result += "; "
+			+ std::to_string(rule.originalRule.lhsSupport)
+			+ ", " + std::to_string(rule.originalRule.rhsSupport)
+			+ ", " + std::to_string(rule.originalRule.support)
+			+ ", " + std::to_string(rule.originalRule.confidence)
+			+ ", " + std::to_string(rule.originalRule.growth);
 
 		return result;
 	}

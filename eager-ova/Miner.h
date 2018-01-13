@@ -23,6 +23,8 @@ struct Rule
 {
 	std::vector<Id> lhs;
 	Id rhs;
+	Support lhsSupport;
+	Support rhsSupport;
 	Support support;
 	double confidence;
 	double growth;
@@ -142,8 +144,11 @@ public:
 				}
 				else
 				{
-					double confidenceValue = static_cast<double>(node.classSupports[i]) / node.support;
-					double growthValue = growth(node.support, node.classSupports[i], i);
+					const double confidenceValue = static_cast<double>(node.classSupports[i]) / node.support;
+					const Support lhsSupport = node.support;
+					const Support rhsSupport = classSupport(i);
+					const Support support = node.classSupports[i];
+					const double growthValue = growth(lhsSupport, rhsSupport, support);
 
 					if ((params.cp && confidenceValue == 1.0) ||
 						(!params.cp && growthValue > params.growthThreshold))
@@ -153,6 +158,8 @@ public:
 						auto& rule = rules.back();
 						rule.lhs = node.ids;
 						rule.rhs = classIds[i];
+						rule.lhsSupport = lhsSupport;
+						rule.rhsSupport = rhsSupport;
 						rule.support = node.support;
 						rule.confidence = confidenceValue;
 						rule.growth = growthValue;
@@ -167,6 +174,16 @@ public:
 	{
 		const Support supY = static_cast<Support>(classTidsets[classIdx].size());
 		return ruleGrowth(supX, supY, supXY, dbSize);
+	}
+
+	double growth(const Support supX, const Support supY, const Support supXY) const
+	{
+		return ruleGrowth(supX, supY, supXY, dbSize);
+	}
+
+	Support classSupport(const uint classIdx) const
+	{
+		return static_cast<Support>(classTidsets[classIdx].size());
 	}
 
 	Params params;
