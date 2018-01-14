@@ -313,3 +313,6 @@ OpenCover/
 
 # Azure Stream Analytics local run output 
 ASALocalRun/
+/rule-based-classification/Datasets
+/eager-ova/car-data
+/eager-ova/sample-data
