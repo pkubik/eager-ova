@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include <vector>
 #include <string>
 #include "Miner.h"
@@ -38,8 +39,8 @@ inline std::vector<std::string> reverseEncoding(const std::unordered_map<std::st
 class RuleDecoder
 {
 public:
-	explicit RuleDecoder(const std::vector<std::string>& reversedEncoding)
-		: reversedEncoding(reversedEncoding) {}
+	explicit RuleDecoder(std::vector<std::string> reversedEncoding)
+		: reversedEncoding(std::move(reversedEncoding)) {}
 
 	struct DecodedRule
 	{
@@ -87,6 +88,76 @@ private:
 	const std::vector<std::string> reversedEncoding;
 };
 
+class TableRuleDecoder
+{
+public:
+	TableRuleDecoder(std::unordered_map<std::string, Id> encoding, std::vector<std::string> columnNames)
+		: ruleDecoder(reverseEncoding(encoding)), encoding(std::move(encoding)), columnNames(std::move(columnNames)) {}
+
+	std::pair<size_t, std::string> decomposeValue(const std::string& value) const
+	{
+		const auto delimPos = value.find('-');
+		const auto columnName = value.substr(0, delimPos);
+		auto cellValue = value.substr(delimPos + 1);
+
+		auto columnIdx = std::find(columnNames.begin(), columnNames.end(), columnName) - columnNames.begin();
+
+		return { columnIdx, cellValue };
+	}
+
+	std::string decodeToRow(const RuleDecoder::DecodedRule& rule) const
+	{
+		std::vector<std::string> values(columnNames.size());
+
+		for (const auto& value : rule.lhs)
+		{
+			const auto pair = decomposeValue(value);
+			values[pair.first] = pair.second;
+		}
+
+		{
+			const auto pair = decomposeValue(rule.rhs);
+			values[pair.first] = pair.second;
+		}
+
+		std::string result;
+		for (const auto& value : values)
+		{
+			result += value + ", ";
+		}
+		result += std::to_string(rule.originalRule.lhsSupport)
+			+ ", " + std::to_string(rule.originalRule.rhsSupport)
+			+ ", " + std::to_string(rule.originalRule.support)
+			+ ", " + std::to_string(rule.originalRule.confidence)
+			+ ", " + std::to_string(rule.originalRule.growth);
+
+		return result;
+	}
+
+	std::string decodeToRow(const Rule& rule) const
+	{
+		const auto decodedRule = ruleDecoder.decode(rule);
+		return decodeToRow(decodedRule);
+	}
+
+	std::string headerString() const
+	{
+		std::string result;
+		for (const auto& name : columnNames)
+		{
+			result += name + ", ";
+		}
+		result += "lhsSupport, rhsSupport, support, confidence, growth";
+
+		return result;
+	}
+
+private:
+	RuleDecoder ruleDecoder;
+	const std::unordered_map<std::string, Id> encoding;
+	const std::vector<std::string> columnNames;
+};
+
 class RuleWriter
 {
 public:
@@ -100,5 +171,24 @@ public:
 
 private:
 	RuleDecoder decoder;
+	std::ofstream stream;
+};
+
+class TableRuleWriter
+{
+public:
+	TableRuleWriter(const std::string& path, std::unordered_map<std::string, Id> encoding, std::vector<std::string> columnNames)
+		: decoder(std::move(encoding), std::move(columnNames)), stream(path)
+	{
+		stream << decoder.headerString() << "\n";
+	}
+
+	void writeRule(const Rule& rule)
+	{
+		stream << decoder.decodeToRow(rule) << "\n";
+	}
+
+private:
+	TableRuleDecoder decoder;
 	std::ofstream stream;
 };

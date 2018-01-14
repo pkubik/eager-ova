@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <chrono>
 #include "IOUtils.h"
 #include "CSVReader.h"
 #include "Dataset.h"
@@ -44,6 +45,9 @@ int main(const int argc, const char* argv[])
 	cout << "Mining the rules..." << endl;
 	const auto& requiredValues = dataset.getRequiredValues();
 	const std::vector<Id> classIds{ requiredValues.begin(), requiredValues.end() };
+
+	const auto miningStartTime = std::chrono::steady_clock::now();
+
 	Miner miner{ classIds };
 	if (params.count("minSupport") > 0)
 		miner.params.minRelSupport = params.at("minSupport");
@@ -53,14 +57,33 @@ int main(const int argc, const char* argv[])
 		miner.params.growthThreshold = params.at("growthThreshold");
 
 	auto rules = miner.mine(dataset.getItems());
+
+	const auto miningFinishTime = std::chrono::steady_clock::now();
+	const auto miningDuration = miningFinishTime - miningStartTime;
+
 	cout << "Discovered " << std::to_string(rules.size()) << " rules..." << endl;
+	cout.precision(16);
+	cout << "Mining took " <<
+		std::chrono::duration_cast<std::chrono::duration<double>>(miningDuration).count() <<
+		"s" << endl;
 
 	cout << "Writing the rules..." << endl;
 	const auto rulesPath = dataPath + RULES_PATH_SUFFIX;
-	RuleWriter writer(rulesPath, dataset.getValueEncoding());
-	for (const auto& rule : rules)
+	if (params.count("tabularOutput") && params.at("tabularOutput"))
 	{
-		writer.writeRule(rule);
+		TableRuleWriter writer(rulesPath, dataset.getValueEncoding(), dataset.getColumnNames());
+		for (const auto& rule : rules)
+		{
+			writer.writeRule(rule);
+		}
+	}
+	else
+	{
+		RuleWriter writer(rulesPath, dataset.getValueEncoding());
+		for (const auto& rule : rules)
+		{
+			writer.writeRule(rule);
+		}
 	}
 
 	return 0;

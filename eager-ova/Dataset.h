@@ -23,6 +23,14 @@ public:
 	{
 		for (uint i = 0; i < columnNames.size(); ++i)
 		{
+			if (i != classColumn)
+			{
+				if (row[i].empty() || row[i] == "?" || row[i] == "NaN" || row[i] == "nan" || row[i] == "NAN")
+				{
+					continue;
+				}
+			}
+
 			Id valueId;
 			
 			if (ignoreColumns)

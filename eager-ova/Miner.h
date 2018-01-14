@@ -120,11 +120,15 @@ public:
 						if (tmp->isAnyClassValid())
 						{
 							lnode->children.push_back(std::move(tmp));
-							stack.push(lnode->children.back().get());
 						}
 					}
 				}
 				lnode->simplify();
+
+				if (!lnode->children.empty())
+				{
+					stack.push(lnode);
+				}
 			}
 		}
 
