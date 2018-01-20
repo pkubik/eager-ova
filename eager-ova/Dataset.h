@@ -13,16 +13,21 @@ typedef std::vector<Id> Tidset;
 class Dataset
 {
 public:
-	explicit Dataset(const std::vector<std::string>& columnNames, const bool ignoreColumns = false, const int classColumn = -1)
-		: columnNames(columnNames)
+	explicit Dataset(std::vector<std::string> columnNames, const bool ignoreColumns = false, const int classColumn = -1)
+		: columnNames(std::move(columnNames))
 		, ignoreColumns(ignoreColumns)
-		, classColumn(classColumn >= 0 ? classColumn : (static_cast<uint>(columnNames.size()) - 1))
+		, classColumn(classColumn >= 0 ? classColumn : (static_cast<uint>(this->columnNames.size()) - 1))
 	{}
 
 	void append(const std::vector<std::string>& row)
 	{
 		for (uint i = 0; i < columnNames.size(); ++i)
 		{
+			if (columnNames[i].empty())
+			{
+				continue;
+			}
+
 			if (i != classColumn)
 			{
 				if (row[i].empty() || row[i] == "?" || row[i] == "NaN" || row[i] == "nan" || row[i] == "NAN")
@@ -89,13 +94,41 @@ public:
 		return currentTid;
 	}
 
-	static Dataset fromFile(const std::string& path, const bool rawData = false, const std::string& indexPath = "")
+	static Dataset fromFile(
+		const std::string& path,
+		const bool rawData = false,
+		const std::string& columnUsage = "",
+		const std::string& indexPath = "")
 	{
-		RowIndex rowIndex = loadRowIndex(indexPath);;
+		CSVReader reader(path, loadRowIndex(indexPath));
+		
+		std::vector<std::string> columnNames = reader.getColumnNames();
+		int targetColumn = -1;
 
-		CSVReader reader(path, std::move(rowIndex));
-		const auto& columnNames = reader.getColumnNames();
-		Dataset dataset{ columnNames, rawData };
+		if (columnUsage.size() == columnNames.size())
+		{
+			for (uint i = 0; i < columnUsage.size(); ++i)
+			{
+				if (columnUsage[i] == '0')
+				{
+					columnNames[i] = "";
+				}
+				if (columnUsage[i] == 'T')
+				{
+					targetColumn = i;
+				}
+			}
+		}
+		else
+		{
+			if (!columnUsage.empty())
+			{
+				logW << "Parameter 'columnUsage' do not match the number of the columns. It will be ignored";
+			}
+			columnNames = reader.getColumnNames();
+		}
+		
+		Dataset dataset{ std::move(columnNames), rawData, targetColumn };
 
 		while (!reader.isEOF())
 		{

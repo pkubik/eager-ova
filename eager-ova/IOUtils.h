@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <functional>
+#include <algorithm>
 #include "Logger.h"
 
 #define STREAM_ASSIGNMENT_FN(name) { #name, [&](std::istringstream& iss) { iss >> params.name; }}
@@ -16,6 +17,7 @@ struct Params
 	bool cp = true;
 	bool rawData = false;
 	bool tabularOutput = false;
+	std::string columnUsage;
 };
 
 /**
@@ -32,6 +34,7 @@ inline Params readParams(const std::string& path)
 		STREAM_ASSIGNMENT_FN(cp),
 		STREAM_ASSIGNMENT_FN(rawData),
 		STREAM_ASSIGNMENT_FN(tabularOutput),
+		STREAM_ASSIGNMENT_FN(columnUsage)
 	};
 
 	std::ifstream file(path);
@@ -56,6 +59,11 @@ inline Params readParams(const std::string& path)
 			fnIt->second(iss);
 		}
 	}
+
+	std::replace(params.columnUsage.begin(), params.columnUsage.end(), '-', '0');
+	std::replace(params.columnUsage.begin(), params.columnUsage.end(), 'U', '1');
+	std::replace(params.columnUsage.begin(), params.columnUsage.end(), 'u', '1');
+	std::replace(params.columnUsage.begin(), params.columnUsage.end(), 't', 'T');
 
 	return params;
 }

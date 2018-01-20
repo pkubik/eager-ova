@@ -37,12 +37,19 @@ int main(const int argc, const char* argv[])
 	const auto paramsPath = dataPath + PARAMS_PATH_SUFFIX;
 	const auto params = readParams(paramsPath);
 
+	if (params.rawData && params.tabularOutput)
+	{
+		cout << "Unsupported parameters: 'rawData' and 'tabularOutput' cannot be both true at the same time";
+		return -1;
+	}
+
 	cout << "Reading the data..." << endl;
 	const auto csvPath = dataPath + CSV_PATH_SUFFIX;
 	const auto indexPath = dataPath + INDEX_PATH_SUFFIX;
 	
 	auto dataset = (params.rawData) ?
-		Dataset::fromFile(csvPath, true, indexPath) : Dataset::fromFile(csvPath, false, indexPath);
+		Dataset::fromFile(csvPath, true, params.columnUsage, indexPath) :
+		Dataset::fromFile(csvPath, false, params.columnUsage, indexPath);
 	cout << "Processed " << dataset.getNumberOfTransactions() << " transactions" << endl;
 
 	cout << "Mining the rules..." << endl;

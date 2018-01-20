@@ -22,12 +22,12 @@ inline Node createRoot(const std::vector<Tidset>& classTidsets)
 struct Rule
 {
 	std::vector<Id> lhs;
-	Id rhs;
-	Support lhsSupport;
-	Support rhsSupport;
-	Support support;
-	double confidence;
-	double growth;
+	Id rhs{};
+	Support lhsSupport{};
+	Support rhsSupport{};
+	Support support{};
+	double confidence{};
+	double growth{};
 };
 
 inline Node::UniquePtr createRootChild(const Node& root, const Id id, Tidset&& tidset, const std::vector<Tidset>& classTidsets)
@@ -51,7 +51,7 @@ inline void addRootChild(Node& root, const Id id, Tidset&& tidset, const std::ve
 	}
 }
 
-inline double ruleGrowth(const Support const supX, const Support supY, const Support supXY, const Support dbSize)
+inline double ruleGrowth(const Support supX, const Support supY, const Support supXY, const Support dbSize)
 {
 	const Support supNotY = dbSize - supY;
 	const Support supXNotY = supX - supXY;
