@@ -41,7 +41,7 @@ int main(const int argc, const char* argv[])
 	const auto csvPath = dataPath + CSV_PATH_SUFFIX;
 	const auto indexPath = dataPath + INDEX_PATH_SUFFIX;
 	
-	auto dataset = (params.count("rawData") > 0 && params.at("rawData")) ?
+	auto dataset = (params.rawData) ?
 		Dataset::fromFile(csvPath, true, indexPath) : Dataset::fromFile(csvPath, false, indexPath);
 	cout << "Processed " << dataset.getNumberOfTransactions() << " transactions" << endl;
 
@@ -52,12 +52,9 @@ int main(const int argc, const char* argv[])
 	const auto miningStartTime = std::chrono::steady_clock::now();
 
 	Miner miner{ classIds };
-	if (params.count("minSupport") > 0)
-		miner.params.minRelSupport = params.at("minSupport");
-	if (params.count("cp") > 0)
-		miner.params.cp = params.at("cp");
-	if (params.count("growthThreshold") > 0)
-		miner.params.growthThreshold = params.at("growthThreshold");
+	miner.params.minRelSupport = params.minSupport;
+	miner.params.cp = params.cp;
+	miner.params.growthThreshold = params.growthThreshold;
 
 	auto rules = miner.mine(dataset.getItems());
 
@@ -72,7 +69,7 @@ int main(const int argc, const char* argv[])
 
 	cout << "Writing the rules..." << endl;
 	const auto rulesPath = dataPath + RULES_PATH_SUFFIX;
-	if (params.count("tabularOutput") && params.at("tabularOutput"))
+	if (params.tabularOutput)
 	{
 		TableRuleWriter writer(rulesPath, dataset.getValueEncoding(), dataset.getColumnNames());
 		for (const auto& rule : rules)

@@ -1,21 +1,41 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <functional>
 #include "Logger.h"
+
+#define STREAM_ASSIGNMENT_FN(name) { #name, [&](std::istringstream& iss) { iss >> params.name; }}
+
+struct Params
+{
+	double minSupport = 0.0;
+	double growthThreshold = 4.0;
+	bool cp = true;
+	bool rawData = false;
+	bool tabularOutput = false;
+};
 
 /**
 * Reads parameters from file.
-*
-* Only <string, double> pairs are accepted as parameters, e.g. `minSupport = 0.8`.
 */
-inline std::map<std::string, double> readParams(const std::string& path)
+inline Params readParams(const std::string& path)
 {
+	typedef void AssignFn(std::istringstream&);
+
+	Params params;
+	std::unordered_map<std::string, std::function<AssignFn>> rawParams = {
+		STREAM_ASSIGNMENT_FN(minSupport),
+		STREAM_ASSIGNMENT_FN(growthThreshold),
+		STREAM_ASSIGNMENT_FN(cp),
+		STREAM_ASSIGNMENT_FN(rawData),
+		STREAM_ASSIGNMENT_FN(tabularOutput),
+	};
+
 	std::ifstream file(path);
 
-	std::map<std::string, double> params;
 	std::string line;
 	int ln = 0;
 	while (std::getline(file, line))
@@ -24,14 +44,17 @@ inline std::map<std::string, double> readParams(const std::string& path)
 		std::istringstream iss(line);
 		std::string key;
 		char assignment;
-		double value;
-		if (!(iss >> key >> assignment >> value) || assignment != '=')
+		if (!(iss >> key >> assignment) || assignment != '=')
 		{
 			logW << "Line " << path << ':' << ln << " is malformed" << std::endl;
 			continue;
 		}
 
-		params[key] = value;
+		const auto fnIt = rawParams.find(key);
+		if (fnIt != rawParams.end())
+		{
+			fnIt->second(iss);
+		}
 	}
 
 	return params;
