@@ -56,6 +56,9 @@
     <ClInclude Include="RuleWriter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RowIndex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="sample-data\data.csv">

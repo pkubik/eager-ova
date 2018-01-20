@@ -11,6 +11,7 @@ using namespace std;
 
 constexpr auto PARAMS_PATH_SUFFIX = "\\rule-miner-params.txt";
 constexpr auto CSV_PATH_SUFFIX = "\\data.csv";
+constexpr auto INDEX_PATH_SUFFIX = "\\index.txt";
 constexpr auto RULES_PATH_SUFFIX = "\\rules.txt";
 
 void printHelp()
@@ -38,9 +39,11 @@ int main(const int argc, const char* argv[])
 
 	cout << "Reading the data..." << endl;
 	const auto csvPath = dataPath + CSV_PATH_SUFFIX;
+	const auto indexPath = dataPath + INDEX_PATH_SUFFIX;
 	
 	auto dataset = (params.count("rawData") > 0 && params.at("rawData")) ?
-		Dataset::fromFile(csvPath, true) : Dataset::fromFile(csvPath, false);
+		Dataset::fromFile(csvPath, true, indexPath) : Dataset::fromFile(csvPath, false, indexPath);
+	cout << "Processed " << dataset.getNumberOfTransactions() << " transactions" << endl;
 
 	cout << "Mining the rules..." << endl;
 	const auto& requiredValues = dataset.getRequiredValues();

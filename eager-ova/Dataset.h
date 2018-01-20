@@ -84,9 +84,16 @@ public:
 		return columnNames;
 	}
 
-	static Dataset fromFile(const std::string& path, const bool rawData = false)
+	uint getNumberOfTransactions() const
 	{
-		CSVReader reader(path);
+		return currentTid;
+	}
+
+	static Dataset fromFile(const std::string& path, const bool rawData = false, const std::string& indexPath = "")
+	{
+		RowIndex rowIndex = loadRowIndex(indexPath);;
+
+		CSVReader reader(path, std::move(rowIndex));
 		const auto& columnNames = reader.getColumnNames();
 		Dataset dataset{ columnNames, rawData };
 
