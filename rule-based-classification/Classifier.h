@@ -6,42 +6,9 @@
 #include <algorithm>
 #include <iterator>
 #include <experimental/filesystem>
-#include <boost/functional/hash.hpp>
 
-typedef std::vector<int> RulePre;
+#include "Trie.h"
 
-class Rule
-{
-public:
-
-	Rule(RulePre pop, int nast, int ws_p, int ws_n, int ws, double zau, double wzr)
-		:
-		poprzednik{ pop },
-		nastepnik{ nast },
-		wsparcie_poprzednika{ ws_p },
-		wsparcie_nastepnika{ ws_n },
-		wsparcie{ ws },
-		zaufanie{ zau },
-		wzrost{ wzr } {}
-
-	Rule(RulePre pop, int nas, std::vector<double> rule_info)
-		:
-		poprzednik{ pop },
-		nastepnik{ nas },
-		wsparcie_poprzednika{ int(rule_info[0]) },
-		wsparcie_nastepnika{ int(rule_info[1]) },
-		wsparcie{ int(rule_info[2]) },
-		zaufanie{ rule_info[3] },
-		wzrost{ rule_info[4] } {}
-
-	RulePre poprzednik;
-	int nastepnik;
-	int wsparcie_poprzednika;
-	int wsparcie_nastepnika;
-	int wsparcie;
-	double zaufanie;
-	double wzrost;
-};
 
 enum class ClassifiationMethod
 {
@@ -57,7 +24,11 @@ class RuleBasedClassifier
 public:
 	RuleBasedClassifier()
 	{
+	}
 
+	~RuleBasedClassifier()
+	{
+		delete(rules_root);
 	}
 
 	void processRule(const std::string& rule)
@@ -85,7 +56,6 @@ public:
 		}
 		else
 		{
-
 			while (j > 0)
 			{
 				pop.push_back(std::stoi(poprzedniki.substr(i, j - i)));
@@ -116,8 +86,6 @@ public:
 		Rule processed_rule(pop, class_id, rule_info);
 
 		rules.push_back(processed_rule);
-
-
 	}
 
 	void loadRules(std::string data_path)
@@ -146,7 +114,8 @@ public:
 
 		for (auto& rule : rules)
 		{
-			rules_map.insert(std::make_pair(rule.poprzednik, &rule));
+			//rules_map.insert(std::make_pair(rule.poprzednik, &rule));
+			insertToTrie(rules_root, &rule);
 		}
 
 	}
@@ -162,19 +131,22 @@ public:
 
 			int max_subset_size = test_case.size();
 
-			std::vector<Rule*> good_rules;
+			//std::vector<Rule*> good_rules;
 
-			std::vector< std::vector<int> > all_subsets = getAllSubsets(test_case);
+			//std::vector< std::vector<int> > all_subsets = getAllSubsets(test_case);
 
-			for (auto&& subset : all_subsets)
-			{
-				auto& it = rules_map.find(subset);
-				if (it != rules_map.end())
-				{
-					good_rules.push_back(it->second);
-					//std::cout << it->second->nastepnik;
-				}
-			}
+			//for (auto&& subset : all_subsets)
+			//{
+			//	auto& it = rules_map.find(subset);
+			//	if (it != rules_map.end())
+			//	{
+			//		good_rules.push_back(it->second);
+			//		//std::cout << it->second->nastepnik;
+			//	}
+			//}
+
+			std::vector<Rule*> good_rules = find_all_subsets(rules_root, test_case);
+
 
 			std::sort(good_rules.begin(),
 				good_rules.end(),
@@ -188,34 +160,38 @@ public:
 			{
 			case ClassifiationMethod::CAEP:
 			{
-				//CAEP
-
-				//TODO - Should be normalized using trainset
+				// CAEP (Classification by Aggregating Emerging Patterns)
+				// Version without normalization
 
 				std::vector<float> votes(num_classes);
 
 				for (auto&& rule : good_rules)
 				{
-					//std::cout << rule->nastepnik << " (wsparcie: " << rule->wsparcie << ")\n";
 					float growth = rule->wzrost;
 					float support = float(rule->wsparcie) / dataset_size;
-					float strength = support * (growth / (growth + 1));
+					float strength;
+					if (isinf(growth)) 
+					{
+						strength = support;
+					}
+					else
+					{
+						strength = support * (growth / (growth + 1));
+					}
 					votes[rule->nastepnik] += strength;
-
-
 				}
 
 				int case_result = std::distance(votes.begin(), std::max_element(votes.begin(), votes.end()));
 				results[i] = case_result;
 
-				//std::cout << "CAEP: " << case_result;
-				//std::cout << std::endl;
 				break;
 
 			}
 			case ClassifiationMethod::PCL:
 			{
-				//PCL
+				//PCL (Prediction by Collective Likelihood)
+
+				//TODO - using parameters
 				int m = 1000;
 				int k = 15;
 
@@ -236,6 +212,7 @@ public:
 							break;
 						}
 
+						//TODO: Generel EPs, not only matching rules
 						class_score += float(scores[i][j]->wsparcie) / good_rules[j]->wsparcie;
 						votes[i] = class_score;
 					}
@@ -253,6 +230,7 @@ public:
 			{
 				//CPAR 
 
+				// TODO: k as param
 				int k = 5;
 
 				std::vector<float> votes(num_classes);
@@ -304,6 +282,8 @@ public:
 			{
 				// Decyzja wiekszosciowa
 
+				// TODO: Pierwsze k regul...
+
 				std::vector<int> votes(num_classes);
 				for (auto&& rule : good_rules)
 				{
@@ -335,6 +315,10 @@ private:
 	std::unordered_map<std::string, unsigned short int> class_ids;
 	std::unordered_map<unsigned short int, std::string> labels;
 
+	std::vector<Rule> rules;
+	TrieNode *rules_root = getNode();
+
+
 	void loadLabelsMap(std::string labels_path)
 	{
 		std::ifstream labels_file(labels_path);
@@ -346,13 +330,11 @@ private:
 			class_ids.insert(std::make_pair(label, class_id));
 			labels.insert(std::make_pair(class_id, label));
 		}
-
 		num_classes = class_ids.size();
 	}
 
-	std::vector<Rule> rules;
-
-	template <typename Container> 
+	
+	/*template <typename Container> 
 	struct container_hash {
 		std::size_t operator()(Container const& c) const {
 			return boost::hash_range(c.begin(), c.end());
@@ -378,5 +360,5 @@ private:
 				subset.push_back(subsetTemp[j]);
 		}
 		return subset;
-	}
+	}*/
 };

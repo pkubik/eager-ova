@@ -55,3 +55,31 @@ int main(const int argc, const char* argv[])
 
 	return 0;
 }
+
+
+//// Test
+//int main()
+//{
+//
+//	std::vector<Rule> rules =
+//	{
+//		{ { 1,2,6,10 }, 1, 2, 3, 4, 5, 6 },
+//		{ { 4,5,10 }, 1, 2, 3, 4, 5, 6 },
+//		{ { 12 }, 1, 2, 3, 4, 5, 6 },
+//		{ { 2, 4}, 1, 2, 3, 4, 5, 6 },
+//		{ { 1 }, 1, 2, 3, 4, 5, 6 },
+//		{ { 1, 2, 12 }, 1, 2, 3, 4, 5, 6 }
+//	};
+//
+//	struct TrieNode *root = getNode();
+//
+//	// Construct trie
+//	for (int i = 0; i < rules.size(); i++)
+//		insertToTrie(root, &rules[i]);
+//
+//	RulePre test_case = { 1, 2, 4, 5, 10, 12 };
+//
+//	auto res = find_all_subsets(root, test_case);
+//
+//	return 0;
+//}

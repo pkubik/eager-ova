@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <random>
 #include <chrono>
+#include <map>
 
 #include "CounterDict.h"
 
@@ -123,6 +124,35 @@ public:
 		auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
 		std::mt19937 rng(seed);
 		std::uniform_real_distribution<double> u_rand(0, 1);
+
+		std::map<int, int> per_class_counter;
+
+		std::vector<std::vector<std::string>> rows;
+
+		while (!isEOF())
+		{
+			auto row = nextRow();
+
+			for (int i = 0; i < columnNames.size(); ++i)
+			{
+				Id valueId;
+
+				if (i == classColumn)
+				{
+					const auto& value = columnNames[i] + '_' + row[i];
+					valueId = ClassesDict.at(value);
+					per_class_counter[valueId]++;
+				}
+				else
+				{
+					const auto& value = columnNames[i] + '_' + row[i];
+					valueId = ParamsDict.at(value);
+				}
+			}
+
+			rows.push_back(row);
+
+		}
 			
 
 		while (!isEOF())
@@ -142,13 +172,13 @@ public:
 
 				if (i == classColumn)
 				{
-					const auto& value = columnNames[i] + '-' + row[i];
+					const auto& value = columnNames[i] + '_' + row[i];
 					valueId = ClassesDict.at(value);
 					(r < ratio) ? test_file << value : train_file << value;
 				}
 				else
 				{
-					const auto& value = columnNames[i] + '-' + row[i];
+					const auto& value = columnNames[i] + '_' + row[i];
 					valueId = ParamsDict.at(value);
 					(r < ratio) ? test_file << valueId : train_file << valueId;
 				}

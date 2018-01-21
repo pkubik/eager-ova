@@ -25,7 +25,9 @@
     <ClInclude Include="..\train-test-split\CSVReader.h" />
     <ClInclude Include="Classifier.h" />
     <ClInclude Include="ConfusionMatrix.h" />
+    <ClInclude Include="Rule.h" />
     <ClInclude Include="TestSet.h" />
+    <ClInclude Include="Trie.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2099041F-B141-4ED4-9FB0-379FF122123B}</ProjectGuid>

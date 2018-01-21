@@ -1,5 +1,13 @@
 //
-// Created by Ashok K. Pant on 3/17/16.
+// Based on "Accuracy evaluation project,
+// created by Ashok K. Pant on 3/17/16.
+// https://github.com/ashokpant/accuracy-evaluation-cpp
+//
+// Changes by Pawel Andruszkiewicz
+// Verision 1.5 ( 21.01.2018)
+//
+// MED, Project 2017Z
+// Warsaw University of Technology
 //
 
 #ifndef ACCURACY_EVALUATION_CPP_CONFUSION_HPP
