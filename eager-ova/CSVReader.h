@@ -3,9 +3,11 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <utility>
 #include <vector>
 #include <stdexcept>
 #include "IOUtils.h"
+#include "RowIndex.h"
 
 
 /*
@@ -19,21 +21,13 @@ public:
 	explicit CSVReader(const std::string& path)
 		: path(path), stream(path)
 	{
-		if (stream.fail())
-		{
-			throw std::runtime_error("CSV file does not exist.");
-		}
+		init();
+	}
 
-		std::string cell;
-
-		std::getline(stream, lineBuffer);
-		std::istringstream iss(lineBuffer);
-		while (std::getline(iss, cell, ','))
-		{
-			columnNames.push_back(cell);
-		}
-
-		loadNextRow();
+	explicit CSVReader(const std::string& path, RowIndex rowIndex)
+		: path(path), stream(path), rowIndex(std::move(rowIndex)), rowIndexIterator(this->rowIndex.begin())
+	{
+		init();
 	}
 
 	Row nextRow()
@@ -44,10 +38,20 @@ public:
 			throw std::logic_error("No more rows to fetch.");
 		}
 
+		if (!rowIndex.empty())
+		{
+			while (lineNumber < *rowIndexIterator)
+			{
+				++lineNumber;
+				loadNextRow();
+			}
+			++rowIndexIterator;
+		}
+		++lineNumber;
+
 		std::string cell;
 		Row row(columnNames.size());
 
-		++lineNumber;
 		std::istringstream iss(lineBuffer);
 		for (unsigned i = 0; i < columnNames.size(); ++i)
 		{
@@ -74,11 +78,18 @@ public:
 		return eof;
 	}
 
+	unsigned int getNumberOfReadLines() const
+	{
+		return lineNumber;
+	}
+
 private:
 	std::string path;
 	std::ifstream stream;
+	RowIndex rowIndex;
+	RowIndex::const_iterator rowIndexIterator;
 	std::vector<std::string> columnNames;
-	int lineNumber = 0;
+	unsigned int lineNumber = 0;
 	std::string lineBuffer;
 	bool eof = false;
 
@@ -87,6 +98,25 @@ private:
 		if (line.empty()) return true;
 		if (line[0] == '#') return true;
 		return false;
+	}
+
+	void init()
+	{
+		if (stream.fail())
+		{
+			throw std::runtime_error("CSV file does not exist.");
+		}
+
+		std::string cell;
+
+		std::getline(stream, lineBuffer);
+		std::istringstream iss(lineBuffer);
+		while (std::getline(iss, cell, ','))
+		{
+			columnNames.push_back(cell);
+		}
+
+		loadNextRow();
 	}
 
 	void loadNextRow()
