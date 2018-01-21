@@ -14,6 +14,27 @@
 
 namespace fs = std::experimental::filesystem;
 
+
+
+
+static inline std::string &ltrim(std::string &s)
+{
+	s.erase(s.begin(), find_if_not(s.begin(), s.end(), [](int c) {return isspace(c); }));
+	return s;
+}
+
+static inline std::string &rtrim(std::string &s)
+{
+	s.erase(find_if_not(s.rbegin(), s.rend(), [](int c) {return isspace(c); }).base(), s.end());
+	return s;
+}
+
+static inline std::string trim(const std::string &s)
+{
+	std::string t = s;
+	return ltrim(rtrim(t));
+}
+
 /*
 * CSV header is required
 */
@@ -63,7 +84,8 @@ public:
 				throw std::runtime_error("Parsing error");
 			}
 
-			row[i] = cell;
+			row[i] = trim(cell);
+			
 		}
 
 		loadNextRow();
@@ -127,11 +149,17 @@ public:
 
 		std::map<int, int> per_class_counter;
 
-		std::vector<std::vector<std::string>> rows;
+		typedef std::vector<std::vector<std::string>> rows_list;
+
+		rows_list rows;
+
+		std::unordered_map<int, std::vector<int>> per_class_indices;
 
 		while (!isEOF())
 		{
 			auto row = nextRow();
+
+			Id classId;
 
 			for (int i = 0; i < columnNames.size(); ++i)
 			{
@@ -140,8 +168,8 @@ public:
 				if (i == classColumn)
 				{
 					const auto& value = columnNames[i] + '_' + row[i];
-					valueId = ClassesDict.at(value);
-					per_class_counter[valueId]++;
+					classId = ClassesDict.at(value);
+					per_class_counter[classId]++;
 				}
 				else
 				{
@@ -150,8 +178,27 @@ public:
 				}
 			}
 
+			//rows[classId].push_back(row);
+
+			per_class_indices[classId].push_back(rows.size());
 			rows.push_back(row);
 
+		}
+
+		int class_column = columnNames.size() - 1;
+
+		int type = 0;
+
+		switch (type)
+		{
+		case 0: // random split
+			break;
+		case 1:
+			break;
+		case 2:
+			break;
+		default:
+			break;
 		}
 			
 

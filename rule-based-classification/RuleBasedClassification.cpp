@@ -18,7 +18,8 @@
 int main(const int argc, const char* argv[])
 {
 
-	std::string data_path = "E:\\Programowanie\\eager-ova\\rule-based-classification\\Datasets\\car-test";
+	//std::string data_path = "E:\\Programowanie\\eager-ova\\rule-based-classification\\Datasets\\car-test";
+	std::string data_path = "E:\\Programowanie\\eager-ova\\rule-based-classification\\Datasets\\adult";
 
 	TestSet test(data_path);
 
