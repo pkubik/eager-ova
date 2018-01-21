@@ -40,6 +40,11 @@ public:
 
 		if (!rowIndex.empty())
 		{
+            if (rowIndexIterator == rowIndex.end())
+            {
+                logW << "No more rows to fetch for " << path << "." << std::endl;
+                throw std::logic_error("No more rows to fetch.");
+            }
 			while (lineNumber < *rowIndexIterator)
 			{
 				++lineNumber;
@@ -75,7 +80,7 @@ public:
 
 	bool isEOF() const
 	{
-		return eof;
+		return eof || (!rowIndex.empty() && rowIndexIterator == rowIndex.end());
 	}
 
 	unsigned int getNumberOfReadLines() const

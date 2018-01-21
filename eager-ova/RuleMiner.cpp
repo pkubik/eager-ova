@@ -9,10 +9,10 @@
 
 using namespace std;
 
-constexpr auto PARAMS_PATH_SUFFIX = "\\rule-miner-params.txt";
-constexpr auto CSV_PATH_SUFFIX = "\\data.csv";
-constexpr auto INDEX_PATH_SUFFIX = "\\index.txt";
-constexpr auto RULES_PATH_SUFFIX = "\\rules.txt";
+constexpr auto PARAMS_PATH_SUFFIX = "/rule-miner-params.txt";
+constexpr auto CSV_PATH_SUFFIX = "/data.csv";
+constexpr auto INDEX_PATH_SUFFIX = "/index.txt";
+constexpr auto RULES_PATH_SUFFIX = "/rules.txt";
 
 void printHelp()
 {

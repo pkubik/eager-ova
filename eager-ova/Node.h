@@ -5,7 +5,6 @@
 #include <valarray>
 #include <iterator>
 #include <algorithm>
-#include <cassert>
 #include <stack>
 #include "Types.h"
 #include "Dataset.h"
@@ -73,7 +72,7 @@ struct Node
 	void setTidset(Tidset&& value);
 	void calculateClassSupports(const std::vector<Tidset>& classTidsets);
 	void simplify();
-	Support Node::subsetsMinSupport(const std::vector<Id>& set) const;
+	Support subsetsMinSupport(const std::vector<Id>& set) const;
 	std::vector<Support> subsetsMinClassSupports(const std::vector<Id>& set) const;
 	Node::UniquePtr join(const Node& node, const std::vector<Tidset>& classTidsets) const;
 	bool isAnyClassValid() const;
@@ -81,7 +80,6 @@ struct Node
 	bool isGenerator()
 	{
 		const auto minSubsetsSupport = root->subsetsMinSupport(ids);
-		assert(minSubsetsSupport >= support);
 		return minSubsetsSupport > support;
 	}
 };
