@@ -7,19 +7,78 @@
 #include <cmath>   //because of the ceil function
 #include <algorithm>
 #include <iterator>
+#include <fstream>
+#include <experimental/filesystem>
 
 #include "../train-test-split/CSVReader.h"
 #include "TestSet.h"
 #include "Classifier.h"
 #include "ConfusionMatrix.h"
+#include "IOUtils.h"
 
 
+static void show_usage(std::string name)
+{
+	std::cerr << "Usage: " << name << " <option(s)>"
+		<< "Options:\n"
+		<< "\t-h,--help\t\tShow this help message\n"
+		<< "\t-p,--path \tPath to dir with requierd files"
+		<< std::endl;
+}
 
 int main(const int argc, const char* argv[])
 {
+	if (argc < 2 || argc > 4) {
+		show_usage(argv[0]);
+		return 1;
+	}
+
+	std::string path;
+
+	for (int i = 1; i < argc; ++i)
+	{
+		std::string arg = argv[i];
+		if ((arg == "-h") || (arg == "--help"))
+		{
+			show_usage(argv[0]);
+			return 0;
+		}
+		else if ((arg == "-p") || (arg == "--path"))
+		{
+			if (i + 1 < argc)
+			{ // Make sure we aren't at the end of argv
+				try
+				{
+					path = argv[++i];
+				}
+				catch (std::invalid_argument& ia)
+				{
+					std::cerr << "Invalid argument: " << ia.what() << '\n';
+					return 1;
+				}
+			}
+			else { // There was no argument to the run-algorith option
+				std::cerr << "--path option requires one argument." << std::endl;
+				return 1;
+			}
+		}
+		else
+		{
+			show_usage(argv[0]);
+			return 1;
+		}
+	}
+
+
 
 	//std::string data_path = "E:\\Programowanie\\eager-ova\\rule-based-classification\\Datasets\\car-test";
-	std::string data_path = "E:\\Programowanie\\eager-ova\\rule-based-classification\\Datasets\\adult";
+	//std::string data_path = "E:\\Programowanie\\eager-ova\\rule-based-classification\\Datasets\\adult_test";
+	//std::string params_path = "E:\\Programowanie\\eager-ova\\rule-based-classification\\Datasets\\adult_test\\classifier-params.txt";
+
+	std::string data_path = path;
+	auto params_path = fs::path(data_path).append("classifier-params.txt").string();
+
+	const auto params = readParams(params_path);
 
 	TestSet test(data_path);
 
@@ -29,58 +88,21 @@ int main(const int argc, const char* argv[])
 	RuleBasedClassifier classifier;
 	classifier.loadRules(data_path);
 
+	auto& labels_map = classifier.getLabelsMap();
 
-	std::vector<int> results = classifier.classify(test_set);
+	std::vector<int> results = classifier.classify(test_set, params);
 
-	Confusion confusion_matrix(class_ids, results);
+	Confusion confusion_matrix(class_ids, results, labels_map);
 	confusion_matrix.print();
 
-
-	results = classifier.classify(test_set, ClassifiationMethod::CAEP);
-
-	Confusion confusion_matrix2(class_ids, results);
-	confusion_matrix2.print();
-
-
-	results = classifier.classify(test_set, ClassifiationMethod::CPAR);
-
-	Confusion confusion_matrix3(class_ids, results);
-	confusion_matrix3.print();
-
-	results = classifier.classify(test_set, ClassifiationMethod::PCL);
-
-	Confusion confusion_matrix4(class_ids, results);
-	confusion_matrix4.print();
 	
+	std::ofstream outfile;
+	outfile.open(data_path + "\\classification_results_full.txt", fstream::app);
 
+	for (int i = 0; i < class_ids.size(); i++)
+	{
+		outfile << class_ids[i] << " " << results[i] << std::endl;
+	}
 
 	return 0;
 }
-
-
-//// Test
-//int main()
-//{
-//
-//	std::vector<Rule> rules =
-//	{
-//		{ { 1,2,6,10 }, 1, 2, 3, 4, 5, 6 },
-//		{ { 4,5,10 }, 1, 2, 3, 4, 5, 6 },
-//		{ { 12 }, 1, 2, 3, 4, 5, 6 },
-//		{ { 2, 4}, 1, 2, 3, 4, 5, 6 },
-//		{ { 1 }, 1, 2, 3, 4, 5, 6 },
-//		{ { 1, 2, 12 }, 1, 2, 3, 4, 5, 6 }
-//	};
-//
-//	struct TrieNode *root = getNode();
-//
-//	// Construct trie
-//	for (int i = 0; i < rules.size(); i++)
-//		insertToTrie(root, &rules[i]);
-//
-//	RulePre test_case = { 1, 2, 4, 5, 10, 12 };
-//
-//	auto res = find_all_subsets(root, test_case);
-//
-//	return 0;
-//}

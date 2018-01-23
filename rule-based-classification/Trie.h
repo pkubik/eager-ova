@@ -42,7 +42,7 @@ void insertToTrie(struct TrieNode *root, Rule* rule)
 {
 	struct TrieNode *pCrawl = root;
 
-	RulePre key = rule->poprzednik;
+	RulePre key = rule->antecedent;
 
 	for (int i = 0; i < key.size(); i++)
 	{

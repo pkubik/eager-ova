@@ -8,6 +8,7 @@
 #include <experimental/filesystem>
 
 #include "Trie.h"
+#include "IOUtils.h"
 
 
 enum class ClassifiationMethod
@@ -96,6 +97,10 @@ public:
 
 		loadLabelsMap(labels_path);
 
+		auto train_size_path = fs::path(data_path).append("train_size.txt").string();
+
+		loadTrainDatasetSize(train_size_path);
+
 		auto rules_path = fs::path(data_path).append("rules.txt").string();
 
 		std::ifstream rules_file(rules_path);
@@ -114,15 +119,40 @@ public:
 
 		for (auto& rule : rules)
 		{
-			//rules_map.insert(std::make_pair(rule.poprzednik, &rule));
 			insertToTrie(rules_root, &rule);
 		}
 
 	}
 
 
-	std::vector<int> classify(std::vector<RulePre> test_set, ClassifiationMethod method = ClassifiationMethod::K_MAX)
+
+	//std::vector<int> classify(std::vector<RulePre> test_set, ClassifiationMethod method = ClassifiationMethod::K_MAX)
+	std::vector<int> classify(std::vector<RulePre> test_set, Params classification_params)
 	{
+		std::string method_param = classification_params.METHOD;
+
+		ClassifiationMethod method = ClassifiationMethod::K_MAX;
+		if (method_param == "K_MAX")
+		{
+			method = ClassifiationMethod::K_MAX;
+		}
+		else if (method_param == "PCL")
+		{
+			method = ClassifiationMethod::PCL;
+		}
+		else if (method_param == "CAEP")
+		{
+			method = ClassifiationMethod::CAEP;
+		}
+		else if (method_param == "CPAR")
+		{
+			method = ClassifiationMethod::CPAR;
+		}
+		else
+		{
+			std::cerr << "Wrong METHOD param! Using default (K_MAX)" << std::endl;
+		}
+
 		std::vector<int> results(test_set.size());
 
 		for (unsigned int i = 0; i < test_set.size(); i++)
@@ -131,20 +161,6 @@ public:
 
 			int max_subset_size = test_case.size();
 
-			//std::vector<Rule*> good_rules;
-
-			//std::vector< std::vector<int> > all_subsets = getAllSubsets(test_case);
-
-			//for (auto&& subset : all_subsets)
-			//{
-			//	auto& it = rules_map.find(subset);
-			//	if (it != rules_map.end())
-			//	{
-			//		good_rules.push_back(it->second);
-			//		//std::cout << it->second->nastepnik;
-			//	}
-			//}
-
 			std::vector<Rule*> good_rules = find_all_subsets(rules_root, test_case);
 
 
@@ -152,7 +168,7 @@ public:
 				good_rules.end(),
 				[](auto &left, auto &right)
 			{
-				return left->wsparcie > right->wsparcie;
+				return left->support > right->support;
 			});
 
 
@@ -167,8 +183,8 @@ public:
 
 				for (auto&& rule : good_rules)
 				{
-					float growth = rule->wzrost;
-					float support = float(rule->wsparcie) / dataset_size;
+					float growth = rule->growth;
+					float support = float(rule->support) / dataset_size;
 					float strength;
 					if (isinf(growth)) 
 					{
@@ -178,7 +194,7 @@ public:
 					{
 						strength = support * (growth / (growth + 1));
 					}
-					votes[rule->nastepnik] += strength;
+					votes[rule->consequent] += strength;
 				}
 
 				int case_result = std::distance(votes.begin(), std::max_element(votes.begin(), votes.end()));
@@ -191,9 +207,7 @@ public:
 			{
 				//PCL (Prediction by Collective Likelihood)
 
-				//TODO - using parameters
-				int m = 1000;
-				int k = 15;
+				int k = classification_params.K_PCL;
 
 				std::vector<float> votes(num_classes);
 
@@ -201,7 +215,7 @@ public:
 
 				for (unsigned int i = 0; i < num_classes; i++)
 				{
-					auto it = std::copy_if(good_rules.begin(), good_rules.end(), std::back_inserter(scores[i]), [i](Rule* rule) {return rule->nastepnik == i; });
+					auto it = std::copy_if(good_rules.begin(), good_rules.end(), std::back_inserter(scores[i]), [i](Rule* rule) {return rule->consequent == i; });
 
 					float class_score = 0;
 
@@ -212,8 +226,7 @@ public:
 							break;
 						}
 
-						//TODO: Generel EPs, not only matching rules
-						class_score += float(scores[i][j]->wsparcie) / good_rules[j]->wsparcie;
+						class_score += float(scores[i][j]->support) / good_rules[j]->support;
 						votes[i] = class_score;
 					}
 				}
@@ -221,8 +234,6 @@ public:
 				int case_result = std::distance(votes.begin(), std::max_element(votes.begin(), votes.end()));
 				results[i] = case_result;
 
-				//std::cout << "PCL: " << case_result;
-				//std::cout << std::endl;
 				break;
 
 			}
@@ -230,8 +241,7 @@ public:
 			{
 				//CPAR 
 
-				// TODO: k as param
-				int k = 5;
+				int k = classification_params.K_CPAR;
 
 				std::vector<float> votes(num_classes);
 
@@ -239,7 +249,7 @@ public:
 
 				for (unsigned int i = 0; i < num_classes; i++)
 				{
-					auto it = std::copy_if(good_rules.begin(), good_rules.end(), std::back_inserter(scores[i]), [i](Rule* rule) {return rule->nastepnik == i; });
+					auto it = std::copy_if(good_rules.begin(), good_rules.end(), std::back_inserter(scores[i]), [i](Rule* rule) {return rule->consequent == i; });
 
 					float class_score = 0;
 
@@ -251,10 +261,10 @@ public:
 						}
 
 						/// total number of examples satysfying the rule's body
-						float n_tot = std::round(scores[i][j]->wsparcie_poprzednika * dataset_size);
+						float n_tot = scores[i][j]->antecedent_support;
 
 						/// number of examples which belong to c (predicted class of the rule) among n_tot
-						float n_c = std::round(scores[i][j]->wsparcie * dataset_size);
+						float n_c = scores[i][j]->support;
 
 						float laplace_accuracy = (n_c + 1) / (n_tot + num_classes);
 
@@ -271,8 +281,6 @@ public:
 				int case_result = std::distance(votes.begin(), std::max_element(votes.begin(), votes.end()));
 				results[i] = case_result;
 
-				//std::cout << "CPAR: " << case_result;
-				//std::cout << std::endl;
 				break;
 
 
@@ -282,28 +290,35 @@ public:
 			{
 				// Decyzja wiekszosciowa
 
-				// TODO: Pierwsze k regul...
+				int k = classification_params.K_MAX;
 
 				std::vector<int> votes(num_classes);
-				for (auto&& rule : good_rules)
+
+				for (int i = 0; i < good_rules.size(); i++)
 				{
-					//std::cout << rule->nastepnik << " (wsparcie: " << rule->wsparcie << ", wzrost: " << rule->wzrost << ")\n";
-					votes[rule->nastepnik]++;
+					if (i == k)
+					{
+						break;
+					}
+					votes[good_rules[i]->consequent]++;
 				}
+
 
 				int case_result = std::distance(votes.begin(), std::max_element(votes.begin(), votes.end()));
 				results[i] = case_result;
 
-				//std::cout << "K_MAX: " << case_result;
-				//std::cout << std::endl;
 				break;
 			}
 			}
 
 		}
 
-
 		return results;
+	}
+
+	std::unordered_map<unsigned short int, std::string> getLabelsMap()
+	{
+		return labels;
 	}
 
 private:
@@ -333,32 +348,15 @@ private:
 		num_classes = class_ids.size();
 	}
 
-	
-	/*template <typename Container> 
-	struct container_hash {
-		std::size_t operator()(Container const& c) const {
-			return boost::hash_range(c.begin(), c.end());
-		}
-	};
-
-	std::unordered_map<RulePre, Rule*, container_hash<RulePre>> rules_map;
-
-	std::vector< std::vector<int> > getAllSubsets(std::vector<int> set)
+	void loadTrainDatasetSize(std::string train_size_path)
 	{
-		std::vector< std::vector<int> > subset;
-		std::vector<int> empty;
-		subset.push_back(empty);
+		std::ifstream train_size_file(train_size_path);
 
-		for (int i = 0; i < set.size(); i++)
-		{
-			std::vector< std::vector<int> > subsetTemp = subset;
+		int train_size;
 
-			for (int j = 0; j < subsetTemp.size(); j++)
-				subsetTemp[j].push_back(set[i]);
+		train_size_file >> train_size;
 
-			for (int j = 0; j < subsetTemp.size(); j++)
-				subset.push_back(subsetTemp[j]);
-		}
-		return subset;
-	}*/
+		dataset_size = train_size;
+	}
+
 };

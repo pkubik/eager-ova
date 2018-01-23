@@ -10,29 +10,29 @@ public:
 
 	Rule(RulePre pop, int nast, int ws_p, int ws_n, int ws, double zau, double wzr)
 		:
-		poprzednik{ pop },
-		nastepnik{ nast },
-		wsparcie_poprzednika{ ws_p },
-		wsparcie_nastepnika{ ws_n },
-		wsparcie{ ws },
-		zaufanie{ zau },
-		wzrost{ wzr } {}
+		antecedent{ pop },
+		consequent{ nast },
+		antecedent_support{ ws_p },
+		consequent_support{ ws_n },
+		support{ ws },
+		confidence{ zau },
+		growth{ wzr } {}
 
 	Rule(RulePre pop, int nas, std::vector<double> rule_info)
 		:
-		poprzednik{ pop },
-		nastepnik{ nas },
-		wsparcie_poprzednika{ int(rule_info[0]) },
-		wsparcie_nastepnika{ int(rule_info[1]) },
-		wsparcie{ int(rule_info[2]) },
-		zaufanie{ rule_info[3] },
-		wzrost{ rule_info[4] } {}
+		antecedent{ pop },
+		consequent{ nas },
+		antecedent_support{ int(rule_info[0]) },
+		consequent_support{ int(rule_info[1]) },
+		support{ int(rule_info[2]) },
+		confidence{ rule_info[3] },
+		growth{ rule_info[4] } {}
 
-	RulePre poprzednik;
-	int nastepnik;
-	int wsparcie_poprzednika;
-	int wsparcie_nastepnika;
-	int wsparcie;
-	double zaufanie;
-	double wzrost;
+	RulePre antecedent;
+	int consequent;
+	int antecedent_support;
+	int consequent_support;
+	int support;
+	double confidence;
+	double growth;
 };

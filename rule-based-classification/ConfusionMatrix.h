@@ -4,7 +4,7 @@
 // https://github.com/ashokpant/accuracy-evaluation-cpp
 //
 // Changes by Pawel Andruszkiewicz
-// Verision 1.5 ( 21.01.2018)
+// Verision 1.7 ( 22.01.2018)
 //
 // MED, Project 2017Z
 // Warsaw University of Technology
@@ -14,6 +14,7 @@
 #define ACCURACY_EVALUATION_CPP_CONFUSION_HPP
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include <sstream>  // std::stringstream, std::stringbuf
@@ -40,15 +41,24 @@ public:
 	vector<vector<string>> _ind; //ind[classes][classes]
 	vector<vector<int>> _cm; //cm[classes][classes]
 
+	std::unordered_map<unsigned short int, std::string> _labels;
+
 	Confusion(int classes, int samples) : _classes(classes), _samples(samples),
 		_per(classes, vector<double>(4)), _ind(classes, vector<string>(classes)),
 		_cm(classes, vector<int>(classes)) { }
 
-	Confusion(vector<vector<double>> targets, vector<vector<double>> outputs) {
+	Confusion(vector<vector<double>> targets, vector<vector<double>> outputs) 
+	{
 		confusion(targets, outputs);
 	}
 
-	Confusion(vector<int> targets, vector<int> outputs) {
+	Confusion(vector<int> targets, vector<int> outputs, std::unordered_map<unsigned short int, std::string> labels) : Confusion(targets, outputs)
+	{
+		_labels = labels;
+	}
+
+	Confusion(vector<int> targets, vector<int> outputs)
+	{
 		vector<vector<double>> tar;
 		vector<vector<double>> out;
 		convertToBooleanMatrix(targets, outputs, tar, out);
@@ -57,8 +67,13 @@ public:
 
 	void convertToBooleanMatrix(vector<int> targets, vector<int> outputs, vector<vector<double>> &tar,
 		vector<vector<double>> &out) {
-		int numClasses =
-			*max_element(targets.begin(), targets.end()) - *min_element(targets.begin(), targets.end()) + 1;
+		int max_target = *max_element(targets.begin(), targets.end());
+		int min_target = *min_element(targets.begin(), targets.end());
+		int max_output = *max_element(outputs.begin(), outputs.end());
+		int min_output = *min_element(outputs.begin(), outputs.end());
+		int numClasses = max(max_target, max_output) - min(min_target, min_output) + 1;
+		//int numClasses =
+			//*max_element(targets.begin(), targets.end()) - *min_element(targets.begin(), targets.end()) + 1;
 		int numSamples = targets.size();
 		vector<vector<double>> t(numClasses, vector<double>(numSamples));
 		vector<vector<double>> o(numClasses, vector<double>(numSamples));
@@ -280,55 +295,112 @@ public:
 
 	void printAccuracy()
 	{
-		cout << "\tAccuracy:\n\t\tc = " << round(1 - _c, 2) << endl;
+		cout << "\tAccuracy:\n\nacc = " << round(1 - _c, 2) << endl;
 	}
 
-	void printCM() {
-		cout << "\tConfusion Matrix" << endl;
+	template<typename T> void printElement(T t, const int& width)
+	{
+		cout << left << setw(width) << setfill(' ') << t;
+	}
 
-		stringstream ss;
-		ss << "\t\torg\\dec\t";
+	int name_width = 20;
+	int num_width = 15;
+
+
+	void printCM() {
+		cout << "\tConfusion Matrix:" << endl << endl;
+
+		//stringstream ss;
+		//ss << "\t\torg\\dec\t";
+
+		printElement("org\\dec", name_width);
 		for (unsigned int i = 0; i < _classes; i++)
 		{
-			ss << i << "\t";
-		}
-		ss << "suma\t" << endl << "\t\t=======================================" << endl;;
-		cout << ss.str();
-		for (int row = 0; row <= _classes; row++) {
-			if (row < _classes)
+			if (_labels.empty())
 			{
-				cout << "\t\t" << row << ":\t";
+				//ss << i << "\t";
+				printElement(i, num_width);
 			}
 			else
 			{
-				cout << "\t\tsuma:\t";
+				//ss << _labels[i] << "\t";
+				printElement(_labels[i], num_width);
+			}
+			
+		}
+		//ss << "suma\t" << endl;
+		printElement("sum", num_width);
+		cout << endl;
+		cout << "\t\t=======================================" << endl;
+		//cout << ss.str();
+		for (int row = 0; row <= _classes; row++) {
+			if (row < _classes)
+			{
+				if (_labels.empty())
+				{
+					//cout << "\t\t" << row << ":\t";
+					printElement(row, name_width);
+
+				}
+				else
+				{
+					//cout << "\t\t" << _labels[row] << ":\t";
+					printElement(_labels[row], name_width);
+				}
+				
+			}
+			else
+			{
+				cout << endl << "\t\t--------------------------------------" << endl;
+				//cout << "\t\tsuma:\t";
+				printElement("sum", name_width);
 			}
 			for (int col = 0; col <= _classes; col++) {
-				cout << _cm[row][col] << "\t";
+				//cout << _cm[row][col] << "\t";
+				printElement(_cm[row][col], num_width);
 			}
 			cout << endl;
 		}
 	}
 
 	void printPer() {
-		cout << "\tStatistics:" << endl;
-		cout << "\t\tPositive\tRecall\tSpecifity\tPrecision\tF-Meaasure" << endl;
+		cout << "\tStatistics:" << endl << endl;
+		printElement("Positive class", name_width);
+		printElement("Recall", num_width);
+		printElement("Specifity", num_width);
+		printElement("Precision", num_width);
+		printElement("F-measure", num_width);
+		cout << endl;
+		cout << "===========================================================================" << endl;
+		//cout << "\t\tPositive\tRecall\tSpecifity\tPrecision\tF-Meaasure" << endl;
 		for (int row = 0; row < _classes + 2; row++) 
 		{
 			if (row < _classes)
 			{
-				cout << "\t\t" << row << ":\t";
+				if (_labels.empty())
+				{
+					//cout << "\t\t" << row << ":\t\t";
+					printElement(row, name_width);
+				}
+				else
+				{
+					//cout << "\t\t" << _labels[row] << ":\t\t";
+					printElement(_labels[row], name_width);
+				}
 			}
 			else if (row == _classes)
 			{
-				cout << "\t\tMean:\t";
+				//cout << "\t\tMean:\t\t";
+				printElement("mean", name_width);
 			}
 			else
 			{
-				cout << "\t\tStdev:\t";
+				//cout << "\t\tStdev:\t\t";
+				printElement("StDev", name_width);
 			}
 			for (int col = 0; col < 4; col++) {
-				cout << round(_per[row][col], 2) << "\t";
+				//cout << round(_per[row][col], 2) << "\t\t";
+				printElement(round(_per[row][col], 2), num_width);
 			}
 			cout << endl;
 		}  
@@ -337,10 +409,11 @@ public:
 	void print() {
 		cout << "Testing Results" << endl;
 		cout << "=======================================" << endl;
-		//printC();
+		cout << std::endl;
 		printCM();
+		cout << std::endl;
 		printAccuracy();
-		//printInd();
+		cout << std::endl;
 		printPer();
 	}
 

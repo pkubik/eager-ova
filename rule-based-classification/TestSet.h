@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "../train-test-split/CSVReader.h"
+#include "../eager-ova/RowIndex.h"
 
 namespace fs = std::experimental::filesystem;
 
@@ -14,11 +15,14 @@ class TestSet
 public:
 	TestSet(std::string data_dir)
 	{
-		auto test_set_path = fs::path(data_dir).append("data_test.csv").string();
+		auto test_set_path = fs::path(data_dir).append("data.csv").string();
 		auto labels_path = fs::path(data_dir).append("labels.txt").string();
+		auto index_path = fs::path(data_dir).append("index_test.txt").string();
 
 		loadLabelsMap(labels_path);
-		CSVReader reader(test_set_path);
+
+		CSVReader reader(test_set_path, loadRowIndex(index_path));
+		//CSVReader reader(test_set_path);
 
 		auto column_names = reader.getColumnNames();
 		auto class_column = column_names.size() - 1;
@@ -27,7 +31,7 @@ public:
 		{
 			auto row = reader.nextRow();
 
-			RulePre test_case(column_names.size() - 1);
+			RulePre test_case;
 
 			for (int i = 0; i < column_names.size(); i++)
 			{
@@ -37,7 +41,10 @@ public:
 				}
 				else
 				{
-					test_case[i] = std::stoi(row[i]);
+					if (row[i] != "NaN")
+					{
+						test_case.push_back(std::stoi(row[i]));
+					}
 				}
 			}
 

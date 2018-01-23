@@ -38,5 +38,11 @@
     <ClInclude Include="Rule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IOUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>

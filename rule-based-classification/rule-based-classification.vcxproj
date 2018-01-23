@@ -25,9 +25,13 @@
     <ClInclude Include="..\train-test-split\CSVReader.h" />
     <ClInclude Include="Classifier.h" />
     <ClInclude Include="ConfusionMatrix.h" />
+    <ClInclude Include="IOUtils.h" />
     <ClInclude Include="Rule.h" />
     <ClInclude Include="TestSet.h" />
     <ClInclude Include="Trie.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2099041F-B141-4ED4-9FB0-379FF122123B}</ProjectGuid>
@@ -150,6 +154,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\boost_1_65_1</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
