@@ -126,7 +126,6 @@ public:
 
 
 
-	//std::vector<int> classify(std::vector<RulePre> test_set, ClassifiationMethod method = ClassifiationMethod::K_MAX)
 	std::vector<int> classify(std::vector<RulePre> test_set, Params classification_params)
 	{
 		std::string method_param = classification_params.METHOD;

@@ -70,7 +70,6 @@ int main(const int argc, const char* argv[])
 	}
 
 
-
 	//std::string data_path = "E:\\Programowanie\\eager-ova\\rule-based-classification\\Datasets\\car-test";
 	//std::string data_path = "E:\\Programowanie\\eager-ova\\rule-based-classification\\Datasets\\adult_test";
 	//std::string params_path = "E:\\Programowanie\\eager-ova\\rule-based-classification\\Datasets\\adult_test\\classifier-params.txt";
@@ -97,7 +96,8 @@ int main(const int argc, const char* argv[])
 
 	
 	std::ofstream outfile;
-	outfile.open(data_path + "\\classification_results_full.txt", fstream::app);
+	auto res_path = fs::path(data_path).append("classification_results_full.txt").string();
+	outfile.open(res_path, fstream::app);
 
 	for (int i = 0; i < class_ids.size(); i++)
 	{

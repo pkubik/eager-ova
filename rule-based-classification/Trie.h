@@ -4,7 +4,6 @@
 
 #include "Rule.h"
 
-//using namespace std;
 
 
 // trie node

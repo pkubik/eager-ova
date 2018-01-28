@@ -341,7 +341,7 @@ public:
 			}
 			break;
 		}
-		case SplitType::CROSS_VALIDATION: // cros validation
+		case SplitType::CROSS_VALIDATION: // cross validation
 		{
 			for (int i = 0; i < k; i++)
 			{
@@ -360,14 +360,12 @@ public:
 				{
 					auto class_indices = per_class_indices[cl];
 
-					//std::shuffle(class_indices.begin(), class_indices.end(), rng);
 					int low_border = i * float(class_indices.size())/ k;
 					int high_border = (i + 1) * float(class_indices.size() / k);
 
 					for (int j = 0; j < class_indices.size(); j++)
 					{
 						(j >= low_border && j < high_border) ? testing.push_back(class_indices[j]) : training.push_back(class_indices[j]);
-						//(j < border) ? index_test_file << class_indices[j] << std::endl : index_train_file << class_indices[j] << std::endl;
 					}
 				}
 
